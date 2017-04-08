@@ -1,1 +1,1 @@
-# IoT
+Os arquivos adicionados são a interface gráfica e classes necessárias para sua execução. É possível testar o programa com o que já foi adicionado, dando o 'make'. Deixei todos os comentários importantes em maiúsculo. Creio que vocês devam adicionar o código que vocês estão fazendo em partes específicas do código, façam uma busca por 'ADD CODE HERE' dentro da classe InterfaceGrafica que vocês descobrirão as localizações. Tentei fazer o código da interface deixando como públicas somente as funções que acho que vocês irão utilizar, então, não se preocupem com as privadas.
