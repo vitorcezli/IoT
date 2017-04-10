@@ -25,22 +25,6 @@ public class AplicacaoRFID {
      */
     public static void main(String[] args) {
         InterfaceGrafica interfaceGrafica = new InterfaceGrafica();
-
-        /* APENAS UM TESTE MOSTRANDO A UTILIZAÇÃO. AQUI ESTÁ SENDO CHAMADA A FUNÇÃO
-        QUE EXIBIRÁ A INTERFACE GRÁFICA. NOTE QUE QUANDO O 'X' DA INTERFACE É CLICADO O
-        PROGRAMA FECHA */
         interfaceGrafica.mostreInterfaceGrafica();
-        
-        /* AQUI NOVAS INFORMAÇÕES ESTÃO SENDO ADICIONADAS. CADA INFORMAÇÃO É CORRESPONDENTE
-        A UMA ETIQUETA. NOTE QUE APÓS FAZER ISSO, HAVERÁ 'INFINITY' EM UMA DAS COLUNAS, ISSO
-        É NORMAL POIS O TEMPO INTERNO DA INTERFACE ESTÁ IGUAL A 0. ISSO NÃO IRÁ OCORRER
-        QUANDO O PROGRAMA ESTIVER PRONTO, EM QUE AS ETIQUETAS SERÃO ADICIONADAS ENQUANTO O
-        TEMPO ESTIVER SENDO INCREMENTADO */
-        for( int i = 20; i >= 0; i-- ) {
-            interfaceGrafica.adicionaNovaInformacao( "ID" + i, "IP" + ( 40 - i ) );
-        }
-        
-        /* USADO APENAS PARA INCREMENTAR A QUANTIDADE DE LEITURA DA ETIQUETA COM ID2 */
-        interfaceGrafica.ultimaLeituraInformacao( "ID2" );
     }
 }
