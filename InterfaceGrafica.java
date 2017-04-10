@@ -119,7 +119,7 @@ public class InterfaceGrafica extends JFrame {
      * lista que armazenará as informações das etiquetas para serem exibidas
      * na tabela
      */
-    private final ArrayList< InformacaoRFID > informacoesRFID;
+    private ArrayList< InformacaoRFID > informacoesRFID;
     
     /**
      * tempo decorrido em milissegundos
@@ -135,6 +135,26 @@ public class InterfaceGrafica extends JFrame {
      * quantidade de tentativas de leituras das etiquetas
      */
     private int quantidadeTentativa;
+    
+    /**
+     * label do ip
+     */
+    private JLabel ipLabel;
+    
+    /**
+     * campo de texto onde será exibido o ip do leitor
+     */
+    private JTextField ipTextField;
+    
+    /**
+     * combo box que irá permitir selecionar o leitor
+     */
+    private JComboBox< String > leitorComboBox;
+    
+    /**
+     * label do leitor
+     */
+    private JLabel leitorLabel;
     
     /**
      * cria uma interface gráfica
@@ -168,10 +188,10 @@ public class InterfaceGrafica extends JFrame {
             if( informacoesRFID.get( i ).retornaId().equals( id ) ) {
                 informacoesRFID.get( i ).defineUltimaLeitura( tempo );
                 informacoesTable.setValueAt( 
-                    informacoesRFID.get( i ).retornaTempoUltimaLeitura(), i, 3 
+                    informacoesRFID.get( i ).retornaTempoUltimaLeitura(), i, 2 
                 );
                 informacoesTable.setValueAt( 
-                    informacoesRFID.get( i ).retornaQuantidadeLeitura(), i, 4 
+                    informacoesRFID.get( i ).retornaQuantidadeLeitura(), i, 3 
                 );
             }
         }
@@ -223,6 +243,18 @@ public class InterfaceGrafica extends JFrame {
     }
     
     /**
+     * reinicia a leitura das etiquetas zerando todos os dados
+     */
+    private void reiniciaTudo() {
+        informacoesRFID = new ArrayList< InformacaoRFID >();
+        quantidadeTentativa = 0;
+        tempo = 0;
+        tempoDecorridoTextField.setText( "0" );
+        tentativaLeituraTextField.setText( "0" );
+        atualizaTabela();
+    }
+    
+    /**
      * ordena a lista de acordo com a opção escolhida no JComboBox
      */
     private void ordenaLista() {
@@ -240,14 +272,6 @@ public class InterfaceGrafica extends JFrame {
                 // já foi configurado
                 break;
             case 1:
-                comparadorOrdenacao = new Comparator< InformacaoRFID >() {
-                    @Override
-                    public int compare( InformacaoRFID i1, InformacaoRFID i2 ) {
-                        return i1.retornaIp().compareTo( i2.retornaIp() );
-                    }
-                };
-                break;
-            case 2:
                 comparadorOrdenacao = new Comparator< InformacaoRFID >() {
                     @Override
                     public int compare( InformacaoRFID i1, InformacaoRFID i2 ) {
@@ -284,7 +308,6 @@ public class InterfaceGrafica extends JFrame {
         for( InformacaoRFID informacao : informacoesRFID ) {
             modelo.addRow( new Object[]{ 
                 informacao.retornaId(),
-                informacao.retornaIp(),
                 stringDivisao( 
                     informacao.retornaQuantidadeLeitura(),
                     tempo 
@@ -360,6 +383,36 @@ public class InterfaceGrafica extends JFrame {
                 }
             }
         } );
+        leitorComboBox.addItemListener( new ItemListener() {
+            @Override
+            public void itemStateChanged( ItemEvent e ) {
+                reiniciaTudo();
+                timer.stop();
+                if( leitorComboBox.getSelectedIndex() == 0 ) {
+                    /* adicione aqui o código que fará a conexão com o primeiro
+                    leitor e coloque no textField o ip do primeiro leitor.
+                    ADD CODE HERE */
+                    // Exemplo :
+                    /*
+                      reader.setConnection("10.1.60.107", 23);
+                      reader.setUsername("alien");
+                      reader.setPassword("password");
+                      ipTextField.setText("10.1.60.107");
+                     */
+                } else {
+                    /* adicione aqui o código que fará a conexão com o segundo
+                    leitor e coloque no textField o ip do segundo leitor.
+                    ADD CODE HERE */
+                    // Exemplo :
+                    /*
+                      reader.setConnection("10.2.60.101", 23);
+                      reader.setUsername("alien");
+                      reader.setPassword("password");
+                      ipTextField.setText("10.2.60.101");
+                     */
+                }
+            }
+        } );
     }
     
     /**
@@ -418,7 +471,19 @@ public class InterfaceGrafica extends JFrame {
         tentativaLeituraLabel = new javax.swing.JLabel();
         tentativaLeituraTextField = new javax.swing.JTextField( "0" );
         lerEtiquetasButton = new javax.swing.JButton();
+        leitorLabel = new javax.swing.JLabel("Leitor:");
+        leitorComboBox = new javax.swing.JComboBox<>();
+        leitorComboBox.setBackground(new java.awt.Color(255, 255, 255));
+        leitorComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Leitor 1", "Leitor 2" }));
+        leitorComboBox.setToolTipText("");
+        leitorComboBox.setFocusable(false);
+        ipLabel = new javax.swing.JLabel( "IP do leitor:");
         
+        /* adicione como parâmetro do construtor do textField a string com o ip
+        do primeiro leitor. ADD CODE HERE */
+        ipTextField = new javax.swing.JTextField( "ADD CODE HERE 1" );
+        ipTextField.setEditable(false);
+        ipTextField.setBackground(new java.awt.Color(255, 255, 255));
         lerEtiquetasButton.setText("Ler etiquetas");
         lerEtiquetasButton.setFocusable(false);        
         tentativaLeituraLabel.setText("Tentativa leitura:");
@@ -429,10 +494,10 @@ public class InterfaceGrafica extends JFrame {
         informacoesTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {},
             new String [] {
-                "ID", "IP", "Read Rate", "Success Rate", "Quantidade leitura" }
+                "ID", "Read Rate", "Success Rate", "Quantidade leitura" }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false
             };
 
             @Override
@@ -458,7 +523,7 @@ public class InterfaceGrafica extends JFrame {
         ordenacaoLabel.setText("Ordenar por:");
 
         ordenacaoComboBox.setBackground(new java.awt.Color(255, 255, 255));
-        ordenacaoComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Identificação", "Endereço IP", "Quantidade de leitura" }));
+        ordenacaoComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Identificação", "Quantidade de leitura" }));
         ordenacaoComboBox.setToolTipText("");
         ordenacaoComboBox.setFocusable(false);
 
@@ -478,7 +543,11 @@ public class InterfaceGrafica extends JFrame {
                     .addGroup(configuracaoPanelLayout.createSequentialGroup()
                         .addComponent(ordenacaoLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ordenacaoComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(ordenacaoComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(configuracaoPanelLayout.createSequentialGroup()
+                        .addComponent(leitorLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(leitorComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(configuracaoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(configuracaoPanelLayout.createSequentialGroup()
@@ -488,13 +557,23 @@ public class InterfaceGrafica extends JFrame {
                     .addGroup(configuracaoPanelLayout.createSequentialGroup()
                         .addComponent(tentativaLeituraLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(tentativaLeituraTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(tentativaLeituraTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(configuracaoPanelLayout.createSequentialGroup()
+                        .addComponent(ipLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(ipTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(61, 61, 61))
         );
         configuracaoPanelLayout.setVerticalGroup(
             configuracaoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(configuracaoPanelLayout.createSequentialGroup()
-                .addContainerGap(53, Short.MAX_VALUE)
+                .addGap(19, 19, 19)
+                .addGroup(configuracaoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(leitorLabel)
+                    .addComponent(leitorComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ipLabel)
+                    .addComponent(ipTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
                 .addGroup(configuracaoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(modoConexaoLabel)
                     .addComponent(modoConexaoComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
