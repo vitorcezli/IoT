@@ -32,6 +32,10 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
+import com.alien.enterpriseRFID.reader.*;
+import com.alien.enterpriseRFID.tags.Tag;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -156,8 +160,14 @@ public class InterfaceGrafica extends JFrame {
      */
     private JLabel leitorLabel;
     
+    /* Reader in IP 150.164.10.41*/
+    private RFIDReader reader1;
+    
+    /* Reader in IP 150.164.10.42*/
+    private RFIDReader reader2;
+    
     /**
-     * cria uma interface gráfica
+     * Cria uma interface gráfica
      */
     public InterfaceGrafica() {
         super( "Interface RFID" );
@@ -165,6 +175,12 @@ public class InterfaceGrafica extends JFrame {
         inicializaComponentes();
         inicializaTimer();
         adicionaListeners();
+        try {
+            reader1 = new RFIDReader("150.164.10.41");
+            reader2 = new RFIDReader("150.164.10.42");
+        } catch (AlienReaderException ex) {
+            System.out.println("Error: " + ex.toString());;
+        }
         tempo = 0;
         quantidadeTentativa = 0;
     }
@@ -233,6 +249,19 @@ public class InterfaceGrafica extends JFrame {
     private void tentaLeituraEtiquetas() {
         acrescentaQuantidadeTentativaLeitura();
 
+        if(leitorComboBox.getSelectedIndex() == 1){
+            try {
+                reader1.OpenReader();
+                Tag[] taglist = reader1.getTags();
+                for(Tag tag : taglist){
+                    
+                }
+            } catch (AlienReaderException ex) {
+                Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        
         /* QUANDO O USUÁRIO CLICAR NO BOTÃO CORRESPONDENTE ESSA FUNÇÃO SERÁ
         INVOCADA PARA REALIZAR A LEITURA DAS ETIQUETAS RFID. ADICIONE
         AQUI O CÓDIGO QUE IRÁ FAZER ISSO. ADD CODE HERE */
@@ -365,54 +394,27 @@ public class InterfaceGrafica extends JFrame {
         } );
         
         // listener das combo boxes
-        ordenacaoComboBox.addItemListener( new ItemListener() {
-            @Override
-            public void itemStateChanged( ItemEvent e ) {
-                ordenaLista();
-                atualizaTabela();
+        ordenacaoComboBox.addItemListener((ItemEvent e) -> {
+            ordenaLista();
+            atualizaTabela();
+        });
+        modoConexaoComboBox.addItemListener((ItemEvent e) -> {
+            timer.stop();
+            if( modoConexaoComboBox.getSelectedIndex() == 0 ) {
+                ativarModoAtivo();
+            } else {
+                ativarModoAutonomo();
             }
-        } );
-        modoConexaoComboBox.addItemListener( new ItemListener() {
-            @Override
-            public void itemStateChanged( ItemEvent e ) {
-                timer.stop();
-                if( modoConexaoComboBox.getSelectedIndex() == 0 ) {
-                    ativarModoAtivo();
-                } else {
-                    ativarModoAutonomo();
-                }
+        });
+        leitorComboBox.addItemListener((ItemEvent e) -> {
+            reiniciaTudo();
+            timer.stop();
+            if( leitorComboBox.getSelectedIndex() == 0 ) {
+                ipTextField.setText(reader1.getIPAddress());
+            } else {
+                ipTextField.setText(reader1.getIPAddress());
             }
-        } );
-        leitorComboBox.addItemListener( new ItemListener() {
-            @Override
-            public void itemStateChanged( ItemEvent e ) {
-                reiniciaTudo();
-                timer.stop();
-                if( leitorComboBox.getSelectedIndex() == 0 ) {
-                    /* adicione aqui o código que fará a conexão com o primeiro
-                    leitor e coloque no textField o ip do primeiro leitor.
-                    ADD CODE HERE */
-                    // Exemplo :
-                    /*
-                      reader.setConnection("10.1.60.107", 23);
-                      reader.setUsername("alien");
-                      reader.setPassword("password");
-                      ipTextField.setText("10.1.60.107");
-                     */
-                } else {
-                    /* adicione aqui o código que fará a conexão com o segundo
-                    leitor e coloque no textField o ip do segundo leitor.
-                    ADD CODE HERE */
-                    // Exemplo :
-                    /*
-                      reader.setConnection("10.2.60.101", 23);
-                      reader.setUsername("alien");
-                      reader.setPassword("password");
-                      ipTextField.setText("10.2.60.101");
-                     */
-                }
-            }
-        } );
+        });
     }
     
     /**
@@ -420,15 +422,12 @@ public class InterfaceGrafica extends JFrame {
      * 1 ms e atualizar o valor no campo de texto
      */
     private void inicializaTimer() {
-        ActionListener listener = new ActionListener() {
-            @Override
-            public void actionPerformed( ActionEvent e ) {
-                tempoDecorridoTextField.setText( 
+        ActionListener listener = (ActionEvent e) -> {
+            tempoDecorridoTextField.setText( 
                     String.valueOf( tempo )
-                );
-                atualizaTabela();
-                tempo++;
-            }
+            );
+            atualizaTabela();
+            tempo++;
         };
         timer = new Timer( 1000, listener );
     }
