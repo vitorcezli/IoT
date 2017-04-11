@@ -256,10 +256,15 @@ public class InterfaceGrafica extends JFrame {
                 Tag[] taglist = reader1.getTags();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
+                    boolean to_continue = false;
                     for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid))
-                            continue;
+                        if(inf.retornaId().equals(tagid)) {
+                            ultimaLeituraInformacao( tagid );
+                            to_continue = true;
+                        }
                     }
+                    if( to_continue ) { continue; }
+                    adicionaNovaInformacao( tagid, "" );
                 }
                 reader1.closeReader();
             } catch (AlienReaderException ex) {
@@ -272,10 +277,15 @@ public class InterfaceGrafica extends JFrame {
                 Tag[] taglist = reader2.getTags();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
+                    boolean to_continue = false;
                     for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid))
-                            continue;
+                        if(inf.retornaId().equals(tagid)) {
+                            ultimaLeituraInformacao( tagid );
+                            to_continue = true;
+                        }
                     }
+                    if( to_continue ) { continue; }
+                    adicionaNovaInformacao( tagid, "" );
                 }
                 reader2.closeReader();
             } catch (AlienReaderException ex) {
@@ -403,6 +413,7 @@ public class InterfaceGrafica extends JFrame {
             }
 
             timer.start();
+            timer2.start();
         } );
         pausarButton.addActionListener( ( e ) -> {
 
@@ -421,6 +432,7 @@ public class InterfaceGrafica extends JFrame {
             }
             
             timer.stop();
+            timer2.stop();
         } );
         lerEtiquetasButton.addActionListener( ( e ) -> {
             tentaLeituraEtiquetas();
@@ -433,6 +445,7 @@ public class InterfaceGrafica extends JFrame {
         });
         modoConexaoComboBox.addItemListener((ItemEvent e) -> {
             timer.stop();
+            timer2.stop();
             if( modoConexaoComboBox.getSelectedIndex() == 0 ) {
                 ativarModoAtivo();
             } else {
@@ -442,6 +455,7 @@ public class InterfaceGrafica extends JFrame {
         leitorComboBox.addItemListener((ItemEvent e) -> {
             reiniciaTudo();
             timer.stop();
+            timer2.stop();
             if( leitorComboBox.getSelectedIndex() == 0 ) {
                 ipTextField.setText("150.164.10.41");
             } else {
@@ -471,27 +485,36 @@ public class InterfaceGrafica extends JFrame {
                 Tag[] taglist = reader1.message.getTagList();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
+                    boolean to_continue = false;
                     for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid))
-                            continue;
+                        if(inf.retornaId().equals(tagid)) {
+                            ultimaLeituraInformacao( tagid );
+                            to_continue = true;
+                        }
                     }
+                    if( to_continue ) { continue; }
+                    adicionaNovaInformacao( tagid, "" );
                 }   
             }
             else {
                 Tag[] taglist = reader2.message.getTagList();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
+                    boolean to_continue = false;
                     for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid))
-                            continue;
+                        if(inf.retornaId().equals(tagid)) {
+                            ultimaLeituraInformacao( tagid );
+                            to_continue = true;
+                        }
                     }
+                    if( to_continue ) { continue; }
+                    adicionaNovaInformacao( tagid, "" );
                 }    
             }
 
             atualizaTabela();
         };
-        timer2 = new Timer( 1000, listener );
-        timer2.start();
+        timer2 = new Timer( 1000, listener2 );
     }
     
     /**
