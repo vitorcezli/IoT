@@ -18,7 +18,6 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -176,7 +175,7 @@ public class InterfaceGrafica extends JFrame {
             reader1 = new RFIDReader("150.164.10.41");
             reader2 = new RFIDReader("150.164.10.42");
         } catch (AlienReaderException ex) {
-            System.out.println("Error: " + ex.toString());;
+            System.out.println("Error: " + ex.toString());
         }
         informacoesRFID = new ArrayList<>();
         inicializaComponentes();
@@ -250,7 +249,7 @@ public class InterfaceGrafica extends JFrame {
     private void tentaLeituraEtiquetas() {
         acrescentaQuantidadeTentativaLeitura();
 
-        if(leitorComboBox.getSelectedIndex() == 1){
+        if(leitorComboBox.getSelectedIndex() == 0){
             try {
                 reader1.openReader();
                 Tag[] taglist = reader1.getTags();
@@ -301,7 +300,7 @@ public class InterfaceGrafica extends JFrame {
      * reinicia a leitura das etiquetas zerando todos os dados
      */
     private void reiniciaTudo() {
-        informacoesRFID = new ArrayList< InformacaoRFID >();
+        informacoesRFID = new ArrayList<>();
         quantidadeTentativa = 0;
         tempo = 0;
         tempoDecorridoTextField.setText( "0" );
@@ -327,20 +326,17 @@ public class InterfaceGrafica extends JFrame {
                 // já foi configurado
                 break;
             case 1:
-                comparadorOrdenacao = new Comparator< InformacaoRFID >() {
-                    @Override
-                    public int compare( InformacaoRFID i1, InformacaoRFID i2 ) {
-                        if( i1.retornaQuantidadeLeitura() > 
+                comparadorOrdenacao = (InformacaoRFID i1, InformacaoRFID i2) -> {
+                    if( i1.retornaQuantidadeLeitura() > 
                             i2.retornaQuantidadeLeitura() ) {
-                            return -1;
-                        } else if( i1.retornaQuantidadeLeitura() <
+                        return -1;
+                    } else if( i1.retornaQuantidadeLeitura() <
                             i2.retornaQuantidadeLeitura() ) {
-                            return 1;
-                        } else {
-                            return 0;
-                        }
+                        return 1;
+                    } else {
+                        return 0;
                     }
-                };
+        };
                 break;
         }
         Collections.sort( informacoesRFID, comparadorOrdenacao );
@@ -360,20 +356,20 @@ public class InterfaceGrafica extends JFrame {
         }
         
         // adiciona os itens na ordem da lista
-        for( InformacaoRFID informacao : informacoesRFID ) {
+        informacoesRFID.forEach((informacao) -> {
             modelo.addRow( new Object[]{ 
                 informacao.retornaId(),
-                stringDivisao( 
-                    informacao.retornaQuantidadeLeitura(),
-                    tempo 
+                stringDivisao(
+                        informacao.retornaQuantidadeLeitura(),
+                        tempo 
                 ),
-                stringDivisao( 
-                    informacao.retornaQuantidadeLeitura(), 
-                    quantidadeTentativa 
+                stringDivisao(
+                        informacao.retornaQuantidadeLeitura(),
+                        quantidadeTentativa 
                 ),
                 informacao.retornaQuantidadeLeitura() 
             } );
-        }
+        });
     }
     
     /**
@@ -398,7 +394,7 @@ public class InterfaceGrafica extends JFrame {
         
         // listeners dos botões
         ativarButton.addActionListener( ( e ) -> {
-            if(leitorComboBox.getSelectedIndex() == 1){
+            if(leitorComboBox.getSelectedIndex() == 0){
                 try {
                     reader1.setupToAutomousModeON();
                 } catch (Exception ex) {
@@ -417,7 +413,7 @@ public class InterfaceGrafica extends JFrame {
         } );
         pausarButton.addActionListener( ( e ) -> {
 
-            if(leitorComboBox.getSelectedIndex() == 1){
+            if(leitorComboBox.getSelectedIndex() == 0){
                 try {
                     reader1.setupToAutomousModeOFF();
                 } catch (Exception ex) {
