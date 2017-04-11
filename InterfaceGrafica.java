@@ -412,7 +412,7 @@ public class InterfaceGrafica extends JFrame {
             if( leitorComboBox.getSelectedIndex() == 0 ) {
                 ipTextField.setText(reader1.getIPAddress());
             } else {
-                ipTextField.setText(reader1.getIPAddress());
+                ipTextField.setText(reader2.getIPAddress());
             }
         });
     }
