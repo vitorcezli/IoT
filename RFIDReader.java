@@ -13,9 +13,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import com.alien.enterpriseRFID.notify.Message;
+import com.alien.enterpriseRFID.notify.MessageListener;
+import com.alien.enterpriseRFID.notify.MessageListenerService;
 import com.alien.enterpriseRFID.reader.*;
 import com.alien.enterpriseRFID.tags.*;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,9 +27,11 @@ import java.util.logging.Logger;
  * This class holds the reader data and its connection. 
  * @author Rafagan Soares
  */
-public class RFIDReader {
+public class RFIDReader implements MessageListener{
     
     private final AlienClass1Reader reader;
+    
+    public Message message;
 
     public RFIDReader(String ipAddress) throws AlienReaderException{
 
@@ -43,7 +49,7 @@ public class RFIDReader {
      * Open the connection with the given IP Address. 
      * @throws AlienReaderException 
      */
-    public void OpenReader() throws AlienReaderException {
+    public void openReader() throws AlienReaderException {
         /* Open a connection to the reader */
         reader.open();
     }
@@ -86,8 +92,50 @@ public class RFIDReader {
     /**
      * Close connection with reader. 
      */
-    public void CloseReader(){
+    public void closeReader(){
         // Close the connection
         reader.close();
+    }
+    
+    public void setupToAutomousModeON() throws Exception{
+        // Set up the message listener service.
+        // It handles streamed data as well as notifications.
+        MessageListenerService service = new MessageListenerService(4000);
+        service.setMessageListener(this);
+        service.startService();
+        
+        reader.open();
+        
+        // Set up TagStream.
+        // Use this host's IPAddress, and the port number that the service is listening on.
+        // getHostAddress() may find a wrong (wireless) Ethernet interface, so you may
+        // need to substitute your computers IP address manually.
+        reader.setTagStreamAddress(InetAddress.getLocalHost().getHostAddress(), service.getListenerPort());
+        reader.setTagStreamFormat(AlienClass1Reader.TEXT_FORMAT); // Make sure service can decode it.
+        reader.setTagStreamMode(AlienClass1Reader.ON);
+
+        // Set up AutoMode - use standard settings.
+        reader.autoModeReset();
+        reader.setAutoMode(AlienClass1Reader.ON);
+
+        // Close the connection and spin while messages arrive
+        reader.close();
+    }
+
+    public void setupToAutomousModeOFF() throws Exception{
+        reader.open();
+        reader.autoModeReset();
+        reader.setTagStreamMode(AlienClass1Reader.OFF);
+        reader.close();
+    }
+    
+    @Override
+    public void messageReceived(Message imessage) {
+        System.out.println("\nStream Data Received:");
+        if (imessage.getTagCount() == 0) {
+            System.out.println("(No Tags)");
+        } else {
+            message = imessage;
+        }
     }
 }

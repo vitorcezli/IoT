@@ -134,6 +134,7 @@ public class InterfaceGrafica extends JFrame {
      * temporizador do programa
      */
     private Timer timer;
+    private Timer timer2;
     
     /**
      * quantidade de tentativas de leituras das etiquetas
@@ -180,7 +181,7 @@ public class InterfaceGrafica extends JFrame {
         informacoesRFID = new ArrayList<>();
         inicializaComponentes();
         inicializaTimer();
-        adicionaListeners();
+        adicionaListeners();  
         tempo = 0;
         quantidadeTentativa = 0;
     }
@@ -251,24 +252,39 @@ public class InterfaceGrafica extends JFrame {
 
         if(leitorComboBox.getSelectedIndex() == 1){
             try {
-                reader1.OpenReader();
+                reader1.openReader();
                 Tag[] taglist = reader1.getTags();
                 for(Tag tag : taglist){
-                    
+                    String tagid = tag.getTagID();
+                    for( InformacaoRFID inf : informacoesRFID){
+                        if(inf.retornaId().equals(tagid))
+                            continue;
+                    }
                 }
+                reader1.closeReader();
             } catch (AlienReaderException ex) {
                 Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
+            }   
+        }
+        else {
+           try {
+                reader2.openReader();
+                Tag[] taglist = reader2.getTags();
+                for(Tag tag : taglist){
+                    String tagid = tag.getTagID();
+                    for( InformacaoRFID inf : informacoesRFID){
+                        if(inf.retornaId().equals(tagid))
+                            continue;
+                    }
+                }
+                reader2.closeReader();
+            } catch (AlienReaderException ex) {
+                Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+            }    
         }
         
-        /* QUANDO O USUÁRIO CLICAR NO BOTÃO CORRESPONDENTE ESSA FUNÇÃO SERÁ
-        INVOCADA PARA REALIZAR A LEITURA DAS ETIQUETAS RFID. ADICIONE
-        AQUI O CÓDIGO QUE IRÁ FAZER ISSO. ADD CODE HERE */
-
-
-
         atualizaTabela();
+        
     }
     
     /**
@@ -372,21 +388,38 @@ public class InterfaceGrafica extends JFrame {
         
         // listeners dos botões
         ativarButton.addActionListener( ( e ) -> {
-
-            /* AQUI DEVERÁ SER COLOCADO O CÓDIGO DA LEITURA AUTOMÁTICA.
-            ADD CODE HERE*/
-
-
+            if(leitorComboBox.getSelectedIndex() == 1){
+                try {
+                    reader1.setupToAutomousModeON();
+                } catch (Exception ex) {
+                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+                }   
+            } else {
+               try {
+                    reader2.setupToAutomousModeON();
+                } catch (Exception ex) {
+                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+                }    
+            }
 
             timer.start();
         } );
         pausarButton.addActionListener( ( e ) -> {
 
-            /* O CÓDIGO QUE IRÁ PARAR COM A LEITURA AUTOMÁTICA DEVER SER
-            ADICIONADO AQUI. ADD CODE HERE */
-
-
-
+            if(leitorComboBox.getSelectedIndex() == 1){
+                try {
+                    reader1.setupToAutomousModeOFF();
+                } catch (Exception ex) {
+                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+                }   
+            } else {
+               try {
+                    reader2.setupToAutomousModeOFF();
+                } catch (Exception ex) {
+                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
+                }    
+            }
+            
             timer.stop();
         } );
         lerEtiquetasButton.addActionListener( ( e ) -> {
@@ -430,6 +463,35 @@ public class InterfaceGrafica extends JFrame {
             tempo++;
         };
         timer = new Timer( 1000, listener );
+        
+        ActionListener listener2 = (ActionEvent e) -> {
+            acrescentaQuantidadeTentativaLeitura();
+
+            if(leitorComboBox.getSelectedIndex() == 1){
+                Tag[] taglist = reader1.message.getTagList();
+                for(Tag tag : taglist){
+                    String tagid = tag.getTagID();
+                    for( InformacaoRFID inf : informacoesRFID){
+                        if(inf.retornaId().equals(tagid))
+                            continue;
+                    }
+                }   
+            }
+            else {
+                Tag[] taglist = reader2.message.getTagList();
+                for(Tag tag : taglist){
+                    String tagid = tag.getTagID();
+                    for( InformacaoRFID inf : informacoesRFID){
+                        if(inf.retornaId().equals(tagid))
+                            continue;
+                    }
+                }    
+            }
+
+            atualizaTabela();
+        };
+        timer2 = new Timer( 1000, listener );
+        timer2.start();
     }
     
     /**
@@ -479,8 +541,8 @@ public class InterfaceGrafica extends JFrame {
         ipLabel = new javax.swing.JLabel( "IP do leitor:");
         
         /* adicione como parâmetro do construtor do textField a string com o ip
-        do primeiro leitor */
-        ipTextField = new javax.swing.JTextField("150.164.10.41");
+        do primeiro leitor. ADD CODE HERE */
+        ipTextField = new javax.swing.JTextField( reader1.getIPAddress() );
         ipTextField.setEditable(false);
         ipTextField.setBackground(new java.awt.Color(255, 255, 255));
         lerEtiquetasButton.setText("Ler etiquetas");
