@@ -171,16 +171,16 @@ public class InterfaceGrafica extends JFrame {
      */
     public InterfaceGrafica() {
         super( "Interface RFID" );
-        informacoesRFID = new ArrayList<>();
-        inicializaComponentes();
-        inicializaTimer();
-        adicionaListeners();
         try {
             reader1 = new RFIDReader("150.164.10.41");
             reader2 = new RFIDReader("150.164.10.42");
         } catch (AlienReaderException ex) {
             System.out.println("Error: " + ex.toString());;
         }
+        informacoesRFID = new ArrayList<>();
+        inicializaComponentes();
+        inicializaTimer();
+        adicionaListeners();
         tempo = 0;
         quantidadeTentativa = 0;
     }
