@@ -542,7 +542,7 @@ public class InterfaceGrafica extends JFrame {
         
         /* adicione como parâmetro do construtor do textField a string com o ip
         do primeiro leitor. ADD CODE HERE */
-        ipTextField = new javax.swing.JTextField( reader1.getIPAddress() );
+        ipTextField = new javax.swing.JTextField( "150.164.10.41" );
         ipTextField.setEditable(false);
         ipTextField.setBackground(new java.awt.Color(255, 255, 255));
         lerEtiquetasButton.setText("Ler etiquetas");
