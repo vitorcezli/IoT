@@ -410,9 +410,9 @@ public class InterfaceGrafica extends JFrame {
             reiniciaTudo();
             timer.stop();
             if( leitorComboBox.getSelectedIndex() == 0 ) {
-                ipTextField.setText(reader1.getIPAddress());
+                ipTextField.setText("150.164.10.41");
             } else {
-                ipTextField.setText(reader2.getIPAddress());
+                ipTextField.setText("150.164.10.42");
             }
         });
     }
@@ -479,8 +479,8 @@ public class InterfaceGrafica extends JFrame {
         ipLabel = new javax.swing.JLabel( "IP do leitor:");
         
         /* adicione como parâmetro do construtor do textField a string com o ip
-        do primeiro leitor. ADD CODE HERE */
-        ipTextField = new javax.swing.JTextField(reader1.getIPAddress());
+        do primeiro leitor */
+        ipTextField = new javax.swing.JTextField("150.164.10.41");
         ipTextField.setEditable(false);
         ipTextField.setBackground(new java.awt.Color(255, 255, 255));
         lerEtiquetasButton.setText("Ler etiquetas");
