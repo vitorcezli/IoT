@@ -74,11 +74,13 @@ public class RFIDReader implements MessageListener{
      */
     public Tag[] getTags() throws AlienReaderException {
         /* Ask the reader to read tags and print them. */
+        reader.open();
         System.out.println("tags requeridas no ip:"+reader.getIPAddress());
         Tag tagList[] = reader.getTagList();
         if (tagList == null) {
           System.out.println("No Tags Found");
         }
+        reader.close();
         return tagList;
     }
     
@@ -111,7 +113,7 @@ public class RFIDReader implements MessageListener{
         // Use this host's IPAddress, and the port number that the service is listening on.
         // getHostAddress() may find a wrong (wireless) Ethernet interface, so you may
         // need to substitute your computers IP address manually.
-        reader.setTagStreamAddress("150.164.0.246", service.getListenerPort());
+        reader.setTagStreamAddress("150.164.0.251", service.getListenerPort());
         reader.setTagStreamFormat(AlienClass1Reader.TEXT_FORMAT); // Make sure service can decode it.
         reader.setTagStreamMode(AlienClass1Reader.ON);
 

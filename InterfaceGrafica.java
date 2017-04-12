@@ -251,7 +251,6 @@ public class InterfaceGrafica extends JFrame {
 
         if(leitorComboBox.getSelectedIndex() == 0){
             try {
-                reader1.openReader();
                 Tag[] taglist = reader1.getTags();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
@@ -265,14 +264,14 @@ public class InterfaceGrafica extends JFrame {
                     if( to_continue ) { continue; }
                     adicionaNovaInformacao( tagid, "" );
                 }
-                reader1.closeReader();
             } catch (AlienReaderException ex) {
                 Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
-            }   
+            } catch (NullPointerException ex){
+                System.out.println("O Vetor de tags está vazia! Verifique conexão ou se o leitor possui tags proximas. ");
+            }
         }
         else {
            try {
-                reader2.openReader();
                 Tag[] taglist = reader2.getTags();
                 for(Tag tag : taglist){
                     String tagid = tag.getTagID();
@@ -286,10 +285,11 @@ public class InterfaceGrafica extends JFrame {
                     if( to_continue ) { continue; }
                     adicionaNovaInformacao( tagid, "" );
                 }
-                reader2.closeReader();
             } catch (AlienReaderException ex) {
                 Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
-            }    
+            }  catch (NullPointerException ex){
+                System.out.println("O Vetor de tags está vazia! Verifique conexão ou se o leitor possui tags proximas. ");
+            }  
         }
         
         atualizaTabela();
@@ -512,6 +512,9 @@ public class InterfaceGrafica extends JFrame {
         };
         timer2 = new Timer( 1000, listener2 );
     }
+    
+    
+/*-----------------Funções da interface Gráfica---------------------------*/
     
     /**
      * modo ativo, em que o usuário deve mandar o programa ler as etiquetas
