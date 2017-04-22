@@ -394,20 +394,6 @@ public class InterfaceGrafica extends JFrame {
         
         // listeners dos botões
         ativarButton.addActionListener( ( e ) -> {
-            if(leitorComboBox.getSelectedIndex() == 0){
-                try {
-                    reader1.setupToAutomousModeON();
-                } catch (Exception ex) {
-                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
-                }   
-            } else {
-               try {
-                    reader2.setupToAutomousModeON();
-                } catch (Exception ex) {
-                    Logger.getLogger(InterfaceGrafica.class.getName()).log(Level.SEVERE, null, ex);
-                }    
-            }
-
             timer.start();
             timer2.start();
         } );
@@ -478,34 +464,46 @@ public class InterfaceGrafica extends JFrame {
             acrescentaQuantidadeTentativaLeitura();
 
             if(leitorComboBox.getSelectedIndex() == 1){
-                Tag[] taglist = reader1.message.getTagList();
-                for(Tag tag : taglist){
-                    String tagid = tag.getTagID();
-                    boolean to_continue = false;
-                    for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid)) {
-                            ultimaLeituraInformacao( tagid );
-                            to_continue = true;
+
+                try{
+                    reader1.setupToAutomousModeON();
+                    Tag[] taglist = reader1.message.getTagList();
+                    for(Tag tag : taglist){
+                        String tagid = tag.getTagID();
+                        boolean to_continue = false;
+                        for( InformacaoRFID inf : informacoesRFID){
+                            if(inf.retornaId().equals(tagid)) {
+                                ultimaLeituraInformacao( tagid );
+                                to_continue = true;
+                            }
                         }
-                    }
-                    if( to_continue ) { continue; }
-                    adicionaNovaInformacao( tagid, "" );
-                }   
+                        if( to_continue ) { continue; }
+                        adicionaNovaInformacao( tagid, "" );
+                    } 
+                } catch( Exception exp ) {
+                    exp.printStackTrace();
+                }  
             }
             else {
-                Tag[] taglist = reader2.message.getTagList();
-                for(Tag tag : taglist){
-                    String tagid = tag.getTagID();
-                    boolean to_continue = false;
-                    for( InformacaoRFID inf : informacoesRFID){
-                        if(inf.retornaId().equals(tagid)) {
-                            ultimaLeituraInformacao( tagid );
-                            to_continue = true;
+                
+                try{
+                    reader2.setupToAutomousModeON();
+                    Tag[] taglist = reader2.message.getTagList();
+                    for(Tag tag : taglist){
+                        String tagid = tag.getTagID();
+                        boolean to_continue = false;
+                        for( InformacaoRFID inf : informacoesRFID){
+                            if(inf.retornaId().equals(tagid)) {
+                                ultimaLeituraInformacao( tagid );
+                                to_continue = true;
+                            }
                         }
-                    }
-                    if( to_continue ) { continue; }
-                    adicionaNovaInformacao( tagid, "" );
-                }    
+                        if( to_continue ) { continue; }
+                        adicionaNovaInformacao( tagid, "" );
+                    }  
+                } catch( Exception exp ) {
+                    exp.printStackTrace();
+                }  
             }
 
             atualizaTabela();
