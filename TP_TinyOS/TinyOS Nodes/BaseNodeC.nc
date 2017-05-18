@@ -8,7 +8,7 @@
  * @date   15 May 2017
  */
 
- module NodeC @safe(){
+ module BaseNodeC @safe(){
     
     uses
     {
@@ -32,7 +32,9 @@
 
 
 implementation{
-    nx_uint8_t meuPai;
+    //nx_uint8_t meuPai;
+    
+    nx_uint16_t id_req_atual;
     bool busy=FALSE;
     ReqTopologiaMsg_t m1;
     RespTopologiaMsg_t m2;
@@ -46,6 +48,9 @@ implementation{
     
     event void Boot.booted() {
       call AMControl.start();
+      id_req_atual = 0;
+
+
     }
 
     event void AMControl.startDone(error_t err) {
