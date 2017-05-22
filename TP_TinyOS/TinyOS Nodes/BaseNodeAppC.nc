@@ -16,7 +16,7 @@ implementation {
   App.AMSend -> AMSenderC;
   App.AMControl -> ActiveMessageC;
   App.Leds -> LedsC;
-  App.MilliTimer -> TimerMilliC;
+  App.Timer0 -> TimerMilliC;
+  App.Timer1 -> TimerMilliC; 
   App.Packet -> AMSenderC;
-  App.Read -> DemoSensorC;
 }

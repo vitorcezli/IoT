@@ -18,7 +18,7 @@
         interface Timer<TMilli> as MilliTimer;
 
         /* Sensores */
-        interface Read<uint16_t> as TempSensor;
+        interface Read <uint16_t> as Sensor;
 
         /* Comunicacao de Radio */
         interface Packet;
@@ -33,11 +33,13 @@
 
 implementation{
     /* Radio Variables */
-    bool busy=FALSE;
+    bool _isBusy = FALSE;
     message_t _packet;
     
     /* Variaveis de sistema RSSF */
+    bool _isReadingSensor = FALSE;
     nx_uint8_t meuPai;
+    nx_uint16_t idReqLocal;
     bool visitado=FALSE;
     msg_t m;
 
@@ -46,7 +48,13 @@ implementation{
      * se não for resposta, mandar para os outros ler a temperatura e a luminosidade
      * responder 
      */
+     
+	void report_problem() { call Leds.led0Toggle(); }
+	void report_sent() { call Leds.led1Toggle(); }
+	void report_received() { call Leds.led2Toggle(); }
+     
     event void Boot.booted() {
+        idReqLocal = 0;
         call AMControl.start();
     }
 
@@ -61,15 +69,21 @@ implementation{
 
     event void AMControl.stopDone(error_t err) {}
 
-    event void AMSend.sendDone(message_t* msg, error_t err) {
+    event void AMSend.sendDone(message_t* msg, error_t error) {
+        if (error == SUCCESS)
+      		report_sent();
+    	else
+      		report_problem();
+        
         if (& _packet == msg) {
-            busy = FALSE;
+            _isBusy = FALSE;
         }
     }
 
     event message_t* Receive.receive(message_t *msg, void *payload, uint8_t len)
     {
-        if(len == sizeof(msg_t) && !busy)
+        report_received();
+        if(len == sizeof(msg_t) && !_isBusy)
         {
             msg_t *mr = (msg_t*) payload;
             if(mr->tipo==0x01) //req top
@@ -86,12 +100,12 @@ implementation{
                     m.destino=TOS_NODE_ID;
                     m.id_req=mr->id_req;
                     if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                        busy=TRUE;
+                        _isBusy = TRUE;
                     //espalhando
                     m.tipo=0x01;
-                    if(!busy)
+                    if(!_isBusy)
                         if(call AMSend.send(AM_BROADCAST_ADDR, & _packet , sizeof(msg_t)) == SUCCESS)
-                            busy=TRUE;
+                            _isBusy = TRUE;
                 }
             }
             else if(mr->tipo==0x02) //resp top
@@ -106,7 +120,7 @@ implementation{
                     m.destino=mr->destino;
                     m.id_req=mr->id_req;
                     if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                        busy=TRUE;
+                        _isBusy = TRUE;
                 }
             }
             else if(mr->tipo==0x03) //req dados
@@ -122,32 +136,33 @@ implementation{
                     m.lum;
                     m.id_req=mr->id_req;
                     if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                        busy=TRUE;
+                        _isBusy = TRUE;
 
                     //espalhando
                     m.tipo=0x03;
-                    if(!busy)
+                    if(!_isBusy)
                         if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                            busy=TRUE;
+                            _isBusy = TRUE;
                 }
             }
             else //resp dados
             {
-                if(mr->dst==TOS_NODE_ID)
+                if(mr->dst == TOS_NODE_ID && !_isReadingSensor)
                 {
                     //encaminhando
                     m.tipo=0x04;
                     m.src= (nx_uint8_t)TOS_NODE_ID;
                     m.dst=meuPai;
                     m.origem=mr->origem;
-                    m.temp=mr->temp;
-                    m.lum=mr->lum;
                     m.id_req=mr->id_req;
-                    if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                        busy=TRUE;
+                    if (call Sensor.read() != SUCCESS)
+      					report_problem();
+      				else _isReadingSensor = TRUE;
                 }
             }
         }
+        if(_isBusy) report_problem();
+        
         return msg;
     }
 
@@ -155,7 +170,19 @@ implementation{
 		// TODO Auto-generated method stub
 	}
 
-	event void TempSensor.readDone(error_t result, uint16_t val){
-		// TODO Auto-generated method stub
+	event void Sensor.readDone(error_t result, uint16_t data)
+	{
+		if (result != SUCCESS)
+      	{
+			data = 0xffff;
+			report_problem();
+      	}
+    	
+    	m.temp = data;
+    	if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+        	_isBusy = TRUE;
+        	
+       	_isReadingSensor = FALSE;
+    	
 	}
 }

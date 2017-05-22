@@ -12,12 +12,9 @@ module BaseNodeC @safe(){
         interface Timer<TMilli> as Timer0;
 		interface Timer<TMilli> as Timer1;
 
-        /* Sensores */
-        interface Read<uint16_t> as TempSensor;
-
         /* Comunicacao de Radio */
-        interface Package;
-        interface AMPackage;
+        interface Packet;
+        interface AMPacket;
         interface AMSend;
         interface SplitControl as AMControl;
         interface Receive;
@@ -27,13 +24,16 @@ module BaseNodeC @safe(){
 
 
 implementation{
-    //nx_uint8_t meuPai;
-    message_t pkt;
+    /* Variaveis de comunicaçao*/
+    message_t _packet;
+    bool _isBusy=FALSE;
+    
+    
     nx_uint16_t id_req_atual;
-    bool busy=FALSE;
-    msg m;
-    FILE *arestas=fopen("arestas.txt", "w");
-    FILE *dados=fopen("dados.txt", "w")
+    msg_t m;
+    
+    //FILE *arestas=fopen("arestas.txt", "w");
+    //FILE *dados=fopen("dados.txt", "w")
 
     //receber -> verificar se é resposta
     //se não for resposta, mandar para os outros
@@ -55,43 +55,41 @@ implementation{
 
     event void Timer0.fired() {
         id_req_atual++;
-        if (!busy) {
-            msg* mr=(msg*)(call Packet.getPayload(&pkt, sizeof(msg)));
+        if (!_isBusy) {
+            msg_t* mr=(msg_t*)(call Packet.getPayload(&_packet, sizeof(msg_t)));
             if (mr == NULL) {
                 return;
             }
-            mr->src=TOS_NODE_ID;
-            mr->tipo=0x01;
-            mr->id_req=id_req;
-            if (call AMSend.send(AM_BROADCAST_ADDR,
-            &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-                busy = TRUE;
+            mr->src = (nx_uint8_t)TOS_NODE_ID;
+            mr->tipo = 0x01;
+            mr->id_req = id_req_atual;
+            if (call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS) {
+                _isBusy = TRUE;
             }
         }
     }
 
     event void Timer1.fired() {
-        id_req++;
-        if (!busy) {
-            msg* mr=(msg*)(call Packet.getPayload(&pkt, sizeof(msg)));
+        id_req_atual++;
+        if (!_isBusy) {
+            msg_t* mr = (msg_t*)(call Packet.getPayload(& _packet, sizeof(msg_t)));
             if (mr == NULL) {
                 return;
             }
-            mr->src=TOS_NODE_ID;
+            mr->src = (nx_uint8_t)TOS_NODE_ID;
             mr->tipo=0x03;
-            mr->id_req=id_req;
-            if (call AMSend.send(AM_BROADCAST_ADDR,
-            &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-                busy = TRUE;
+            mr->id_req=id_req_atual;
+            if (call AMSend.send(AM_BROADCAST_ADDR,& _packet, sizeof(msg_t)) == SUCCESS) {
+                _isBusy = TRUE;
             }
         }
     }
 
     event message_t* Receive.receive(message_t *ms, void *payload, uint8_t len)
     {
-        if(len==sizeof(msg) && !busy)
+        if(len==sizeof(msg_t) && !_isBusy)
         {
-            if(mr->tipo==0x02) //resp top
+            if(ms->tipo == 0x02) //resp top
             {
                 if(mr->dst==TOS_NODE_ID)
                 {
@@ -106,56 +104,8 @@ implementation{
                 }
             }
         }
+        return ms;
     }
 
-    /* Evento de Requisição de dados.
-    event void Receive.receive_req_dados(ReqDados_t *m)
-    {
-        if(m->src==meuPai){
-            //resposta ao pai
-            m4.tam = 32; //nao sei o que vai ser
-            m4.src = TOS_MOTE_ID;
-            m4.dst = meuPai;
-            m4.id_req = m->id_req;
-            m4.dst=m->pai;
-            m4.lum->PhotoC;
-            m4.temp->TempC;
-            m4.origem=TOS_MOTE_ID;
-            if(call AMSend.send_resp_dados(&m4) == SUCESS){
-              busy = true;
-            }
-
-            //mandar para os filhos
-            m3.src=TOS_MOTE_ID;
-            m3.id_req=m->id_req;
-            if(call AMSend.send_resp_dados(&m4) == SUCESS){
-              busy = true;
-            }
-        }
-    }
-
-    event void Receive.receive_resp_dados(RespDados_t *m){
-        if(m->dst==TOS_MOTE_ID){
-            m4.tam = m->tam; //nao sei o que vai ser
-            m4.src = TOS_MOTE_ID;
-            m4.dst = meuPai;
-            m4.id_req = m->id_req;
-            m4.dst=m->pai;
-            if(call AMSend.send_resp_dados(&m4) == SUCESS){
-              busy = true;
-            }
-        }
-    }
-
-
-      event void MilliTimer.fired() {
-    call Read.read();
-  }
-
-  event void AMSend.sendDone(message_t* bufPtr, error_t error) {
-    if (&M4 == bufPtr) {
-      locked = FALSE;
-    }
-  }*/
-
+	event void AMSend.sendDone(message_t *msg, error_t error){}
 }

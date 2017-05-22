@@ -12,6 +12,7 @@ implementation
 	components MainC, NodeC as App;
 	components new TimerMilliC();
 	components LedsC;
+	components new DemoSensorC() as Sensor;
 	
 	/* Radio Communcation Use*/
   	components ActiveMessageC;
@@ -22,6 +23,7 @@ implementation
   	App.Boot -> MainC;
   	App.Leds -> LedsC;
   	App.MilliTimer -> TimerMilliC;
+  	App.Sensor -> Sensor;
   	
  	App.AMSend -> AMSenderC;
   	App.Packet -> AMSenderC;
