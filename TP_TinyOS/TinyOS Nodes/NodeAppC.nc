@@ -1,28 +1,36 @@
 
 #include "nodes_comm.h"
 
-/**
- * 
- * @author Rafagan Soares
- * @date   May 15 2017
- */
+configuration NodeAppC
+{
+	/* Do Nothing. */	
+}
 
-configuration NodeAppC {}
+implementation
+{
+	/* General Use */
+	components MainC, NodeC as App;
+	components new TimerMilliC();
+	components LedsC;
+	components new DemoSensorC() as Sensor;
+	
+	/* Radio Communcation Use*/
+  	components ActiveMessageC;
+  	components new AMSenderC(AM_RADIO_SENSE_MSG);
+  	components new AMReceiverC(AM_RADIO_SENSE_MSG);
+  	
 
-implementation {
-  components MainC, NodeC as App, LedsC, new DemoSensorC();
-  components ActiveMessageC;
-  components new AMSenderC(AM_RADIO_SENSE_MSG);
-  components new AMReceiverC(AM_RADIO_SENSE_MSG);
-  components new TimerMilliC();
-  
-  App.Boot -> MainC.Boot;
-  
-  App.Receive -> AMReceiverC;
-  App.AMSend -> AMSenderC;
-  App.AMControl -> ActiveMessageC;
-  App.Leds -> LedsC;
-  App.MilliTimer -> TimerMilliC;
-  App.Packet -> AMSenderC;
-  App.Read -> DemoSensorC;
+  	App.Boot -> MainC;
+  	App.Leds -> LedsC;
+  	App.MilliTimer -> TimerMilliC;
+  	App.Sensor -> Sensor;
+  	
+ 	App.AMSend -> AMSenderC;
+  	App.Packet -> AMSenderC;
+  	App.AMPacket -> AMSenderC;
+  	App.Receive -> AMReceiverC;
+  	App.AMControl -> ActiveMessageC;
+  	
+  	
+  	//App.Read -> DemoSensorC;
 }

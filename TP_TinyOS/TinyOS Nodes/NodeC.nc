@@ -3,138 +3,186 @@
 #include "nodes_comm.h"
 
 /**
- * 
- * @author Rafagan Soares 
+ *
+ * @author Rafagan Soares
  * @date   15 May 2017
  */
 
  module NodeC @safe(){
-    
+
     uses
     {
         /* General use. */
         interface Boot;
         interface Leds;
         interface Timer<TMilli> as MilliTimer;
-    
+
         /* Sensores */
-        interface Read<uint16_t> as TempSensor;
-    
+        interface Read <uint16_t> as Sensor;
+
         /* Comunicacao de Radio */
-        interface Package;
-        interface AMPackage;
-        interface AMSend; 
+        interface Packet;
+        interface AMPacket;
+        interface AMSend;
         interface SplitControl as AMControl;
         interface Receive;
-    }    
-    
+    }
+
 }
 
 
 implementation{
+    /* Radio Variables */
+    bool _isBusy = FALSE;
+    message_t _packet;
+    
+    /* Variaveis de sistema RSSF */
+    bool _isReadingSensor = FALSE;
     nx_uint8_t meuPai;
-    bool busy=FALSE;
+    nx_uint16_t idReqLocal;
     bool visitado=FALSE;
-    ReqTopologiaMsg_t m1;
-    RespTopologiaMsg_t m2;
-    ReqDados_t m3;
-    RespDados_t m4;
-    
-    //receber -> verificar se é resposta
-    //se não for resposta, mandar para os outros
-    //ler a temperatura e a luminosidade
-    //responder
-    
+    msg_t m;
+
+    /* Procedimento de recebimento de mensagens. 
+     * receber -> verificar se é resposta 
+     * se não for resposta, mandar para os outros ler a temperatura e a luminosidade
+     * responder 
+     */
+     
+	void report_problem() { call Leds.led0Toggle(); }
+	void report_sent() { call Leds.led1Toggle(); }
+	void report_received() { call Leds.led2Toggle(); }
+     
     event void Boot.booted() {
-      call AMControl.start();
+        idReqLocal = 0;
+        call AMControl.start();
     }
 
     event void AMControl.startDone(error_t err) {
         if (err == SUCCESS) {
-            call MilliTimer.startPeriodic(250);
+            call MilliTimer.startPeriodic(TIMER_PERIOD_MILLI);
+        }
+        else {
+            call AMControl.start();
         }
     }
+
     event void AMControl.stopDone(error_t err) {}
 
-    /* Evento de Reconhecimento de Topologia */
-    event void Receive.receive_req_top(ReqTopologiaMsg_t *m){
-        if(visitado==FALSE){
-            meuPai=m->src;
-            visitado=TRUE; //para nao visitar novamente
-
-            //RESPONDENDO
-            m2.tam=10;
-            m2.src=TOS_MOTE_ID;
-            m2.dst=meuPai;
-            m2.id_req=m->id_req;
-            m2.pai=meuPai;
-            m2.destino=TOS_MOTE_ID;
-            call AMSend.send_resp_top(&m2);
-
-            //ENVIANDO
-            m1.tam=6;
-            m1.src=TOS_MOTE_ID;
-            m1.id_req=m->id_req;
-            call AMSend.send_req_top(&m1);
+    event void AMSend.sendDone(message_t* msg, error_t error) {
+        if (error == SUCCESS)
+      		report_sent();
+    	else
+      		report_problem();
+        
+        if (& _packet == msg) {
+            _isBusy = FALSE;
         }
     }
 
-    event void Receive.receive_resp_top(RespTopologiaMsg_t *m){
-        if(m->dst==TOS_MOTE_ID){
-            m2=*m;
-            m2.src=TOS_MOTE_ID;
-            m2.dst=meuPai;
-            call AMSend_send_resp_top(&m2);
-        }
-    }
-    
-    /* Evento de Requisição de dados. */
-    event void Receive.receive_req_dados(ReqDados_t *m)
+    event message_t* Receive.receive(message_t *msg, void *payload, uint8_t len)
     {
-        if(m->src==meuPai){
-            //resposta ao pai
-            m4.tam = 32; //nao sei o que vai ser
-            m4.src = TOS_MOTE_ID;
-            m4.dst = meuPai;
-            m4.id_req = m->id_req;
-            m4.dst=m->pai;
-            m4.lum->PhotoC;
-            m4.temp->TempC;
-            m4.origem=TOS_MOTE_ID;
-            if(call AMSend.send_resp_dados(&m4) == SUCESS){
-              busy = true; 
+        report_received();
+        if(len == sizeof(msg_t) && !_isBusy)
+        {
+            msg_t *mr = (msg_t*) payload;
+            if(mr->tipo==0x01) //req top
+            {
+                if(visitado==FALSE)
+                {
+                    //respondendo
+                    visitado=TRUE;
+                    meuPai=mr->src;
+                    m.tipo=0x02;
+                    m.src= (nx_uint8_t)TOS_NODE_ID;
+                    m.dst=meuPai;
+                    m.origem=meuPai;
+                    m.destino=TOS_NODE_ID;
+                    m.id_req=mr->id_req;
+                    if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+                        _isBusy = TRUE;
+                    //espalhando
+                    m.tipo=0x01;
+                    if(!_isBusy)
+                        if(call AMSend.send(AM_BROADCAST_ADDR, & _packet , sizeof(msg_t)) == SUCCESS)
+                            _isBusy = TRUE;
+                }
             }
-            
-            //mandar para os filhos
-            m3.src=TOS_MOTE_ID;
-            m3.id_req=m->id_req;
-            if(call AMSend.send_resp_dados(&m3) == SUCESS){
-              busy = true; 
+            else if(mr->tipo==0x02) //resp top
+            {
+                if(mr->dst==TOS_NODE_ID)
+                {
+                    //encaminhando
+                    m.tipo=0x02;
+                    m.src= (nx_uint8_t)TOS_NODE_ID;
+                    m.dst=meuPai;
+                    m.origem=mr->origem;
+                    m.destino=mr->destino;
+                    m.id_req=mr->id_req;
+                    if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+                        _isBusy = TRUE;
+                }
+            }
+            else if(mr->tipo==0x03) //req dados
+            {
+                if(mr->src==meuPai)
+                {
+                    //respondendo
+                    m.tipo=0x04;
+                    m.src= (nx_uint8_t)TOS_NODE_ID;
+                    m.dst=meuPai;
+                    m.origem=TOS_NODE_ID;
+                    m.temp;
+                    m.lum;
+                    m.id_req=mr->id_req;
+                    if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+                        _isBusy = TRUE;
+
+                    //espalhando
+                    m.tipo=0x03;
+                    if(!_isBusy)
+                        if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+                            _isBusy = TRUE;
+                }
+            }
+            else //resp dados
+            {
+                if(mr->dst == TOS_NODE_ID && !_isReadingSensor)
+                {
+                    //encaminhando
+                    m.tipo=0x04;
+                    m.src= (nx_uint8_t)TOS_NODE_ID;
+                    m.dst=meuPai;
+                    m.origem=mr->origem;
+                    m.id_req=mr->id_req;
+                    if (call Sensor.read() != SUCCESS)
+      					report_problem();
+      				else _isReadingSensor = TRUE;
+                }
             }
         }
+        if(_isBusy) report_problem();
+        
+        return msg;
     }
-    
-    event void Receive.receive_resp_dados(RespDados_t *m){
-        if(m->dst==TOS_MOTE_ID){
-            m4.tam = m->tam; //nao sei o que vai ser
-            m4.src = TOS_MOTE_ID;
-            m4.dst = meuPai;
-            m4.id_req = m->id_req;
-            if(call AMSend.send_resp_dados(&m4) == SUCESS){
-              busy = true; 
-            }
-        }
-    } 
 
+	event void MilliTimer.fired(){
+		// TODO Auto-generated method stub
+	}
 
-      event void MilliTimer.fired() {
-    call Read.read();
-  }
-
-  event void AMSend.sendDone(message_t* bufPtr, error_t error) {
-    if (&M4 == bufPtr) {
-      busy = FALSE;
-    }
-  }
-
+	event void Sensor.readDone(error_t result, uint16_t data)
+	{
+		if (result != SUCCESS)
+      	{
+			data = 0xffff;
+			report_problem();
+      	}
+    	
+    	m.temp = data;
+    	if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+        	_isBusy = TRUE;
+        	
+       	_isReadingSensor = FALSE;
+    	
+	}
 }

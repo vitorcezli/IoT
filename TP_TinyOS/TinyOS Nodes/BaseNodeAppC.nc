@@ -1,12 +1,5 @@
 #include "nodes_comm.h"
 
-/**
- * 
- * @author Rafagan Soares
- * @date   May 15 2017
- */
-
-
 configuration BaseNodeAppC {}
 
 implementation {
@@ -14,7 +7,8 @@ implementation {
   components ActiveMessageC;
   components new AMSenderC(AM_RADIO_SENSE_MSG);
   components new AMReceiverC(AM_RADIO_SENSE_MSG);
-  components new TimerMilliC();
+  components new TimerMilliC() as Timer0;
+  components new TimerMilliC() as Timer1;
   
   App.Boot -> MainC.Boot;
   
@@ -22,7 +16,7 @@ implementation {
   App.AMSend -> AMSenderC;
   App.AMControl -> ActiveMessageC;
   App.Leds -> LedsC;
-  App.MilliTimer -> TimerMilliC;
+  App.Timer0 -> TimerMilliC;
+  App.Timer1 -> TimerMilliC; 
   App.Packet -> AMSenderC;
-  App.Read -> DemoSensorC;
 }
