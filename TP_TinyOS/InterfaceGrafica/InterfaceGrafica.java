@@ -96,7 +96,8 @@ public class InterfaceGrafica extends JFrame {
             adicionaGrafico();
         } );
         mostrarDadosButton.addActionListener( ( e ) -> {
-            new TabelaInformacoes().mostrarInformacoesTabela();
+            String[][] matriz = { { "ID-1", "20.3", "134" } };
+            new TabelaInformacoes( matriz ).mostrarInformacoesTabela();
         } );
     }
     
@@ -254,5 +255,5 @@ public class InterfaceGrafica extends JFrame {
 
         pack();
     }// </editor-fold>                        
-          
 }
+
