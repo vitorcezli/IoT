@@ -28,18 +28,16 @@ implementation{
     message_t _packet;
     bool _isBusy=FALSE;
     
-    
+    /* Variaveis de comunicação RSSF */
     nx_uint16_t id_req_atual;
     msg_t m;
     
-    //FILE *arestas=fopen("arestas.txt", "w");
-    //FILE *dados=fopen("dados.txt", "w")
-
-    //receber -> verificar se é resposta
-    //se não for resposta, mandar para os outros
-    //ler a temperatura e a luminosidade
-    //responder
-
+    /* Program Function for User Control  */
+    void report_problem() { call Leds.led0Toggle(); }
+	void report_sent() { call Leds.led1Toggle(); }
+	void report_received() { call Leds.led2Toggle(); }
+    
+    
     event void Boot.booted() {
       call AMControl.start();
       id_req_atual = 0;
@@ -87,25 +85,30 @@ implementation{
 
     event message_t* Receive.receive(message_t *ms, void *payload, uint8_t len)
     {
-        if(len==sizeof(msg_t) && !_isBusy)
+        if(len == sizeof(msg_t) && !_isBusy)
         {
-            if(ms->tipo == 0x02) //resp top
+        	msg_t *mr = (msg_t*) payload;
+            if(mr->tipo == 0x02) //resp top
             {
-                if(mr->dst==TOS_NODE_ID)
-                {
-                    fprintf(arestas, "%d %d\n", mr->origem, mr->destino);
-                }
+                
             }
             else if(mr->tipo=0x04) //resp dados
             {
-                if(mr->dst==TOS_NODE_ID)
-                {
-                    fprintf(dados, "%d %lf %lf\n", mr->origem, mr->temp, mr->lum);
-                }
+            	
             }
         }
         return ms;
     }
 
-	event void AMSend.sendDone(message_t *msg, error_t error){}
+	event void AMSend.sendDone(message_t *msg, error_t error)
+	{
+		if (error == SUCCESS)
+      		report_sent();
+    	else
+      		report_problem();
+        
+        if (& _packet == msg) {
+            _isBusy = FALSE;
+        }	
+	}
 }

@@ -10,20 +10,24 @@ implementation
 {
 	/* General Use */
 	components MainC, NodeC as App;
-	components new TimerMilliC();
+	components new TimerMilliC() as TopoTimer;
+	components new TimerMilliC() as DadoTimer;
 	components LedsC;
-	components new DemoSensorC() as Sensor;
+	components new DemoSensorC() as PhotoC;
+	components new DemoSensorC() as TempC;
+	
 	
 	/* Radio Communcation Use*/
   	components ActiveMessageC;
   	components new AMSenderC(AM_RADIO_SENSE_MSG);
   	components new AMReceiverC(AM_RADIO_SENSE_MSG);
   	
-
   	App.Boot -> MainC;
   	App.Leds -> LedsC;
-  	App.MilliTimer -> TimerMilliC;
-  	App.Sensor -> Sensor;
+  	App.MilliTimerTop -> TopoTimer;
+  	App.MilliTimerDad -> DadoTimer;
+  	App.PSensor -> PhotoC;
+  	App.TSensor -> TempC;
   	
  	App.AMSend -> AMSenderC;
   	App.Packet -> AMSenderC;
@@ -31,6 +35,4 @@ implementation
   	App.Receive -> AMReceiverC;
   	App.AMControl -> ActiveMessageC;
   	
-  	
-  	//App.Read -> DemoSensorC;
 }

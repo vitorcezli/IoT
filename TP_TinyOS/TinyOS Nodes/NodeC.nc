@@ -15,10 +15,12 @@
         /* General use. */
         interface Boot;
         interface Leds;
-        interface Timer<TMilli> as MilliTimer;
+        interface Timer<TMilli> as MilliTimerTop;
+        interface Timer<TMilli> as MilliTimerDad;
 
         /* Sensores */
-        interface Read <uint16_t> as Sensor;
+        interface Read <uint16_t> as TSensor;
+        interface Read <uint16_t> as PSensor;
 
         /* Comunicacao de Radio */
         interface Packet;
@@ -37,7 +39,9 @@ implementation{
     message_t _packet;
     
     /* Variaveis de sistema RSSF */
-    bool _isReadingSensor = FALSE;
+    bool _TDataOK = FALSE, _PDataOK = FALSE;
+    bool _isReadingSensorT = FALSE;
+    bool _isReadingSensorP = FALSE;
     nx_uint8_t meuPai;
     nx_uint16_t idReqLocal;
     bool visitado=FALSE;
@@ -60,7 +64,7 @@ implementation{
 
     event void AMControl.startDone(error_t err) {
         if (err == SUCCESS) {
-            call MilliTimer.startPeriodic(TIMER_PERIOD_MILLI);
+            //call MilliTimer.startPeriodic(TIMER_PERIOD_MILLI);
         }
         else {
             call AMControl.start();
@@ -102,10 +106,7 @@ implementation{
                     if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
                         _isBusy = TRUE;
                     //espalhando
-                    m.tipo=0x01;
-                    if(!_isBusy)
-                        if(call AMSend.send(AM_BROADCAST_ADDR, & _packet , sizeof(msg_t)) == SUCCESS)
-                            _isBusy = TRUE;
+                    call MilliTimerTop.startOneShot(250);
                 }
             }
             else if(mr->tipo==0x02) //resp top
@@ -132,22 +133,23 @@ implementation{
                     m.src= (nx_uint8_t)TOS_NODE_ID;
                     m.dst=meuPai;
                     m.origem=TOS_NODE_ID;
-                    m.temp;
-                    m.lum;
                     m.id_req=mr->id_req;
-                    if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                        _isBusy = TRUE;
+                    if (call TSensor.read() != SUCCESS)
+      					report_problem();
+      				else _isReadingSensorT = TRUE;
+      				if (call PSensor.read() != SUCCESS)
+      					report_problem();
+      				else _isReadingSensorP = TRUE;
+
+					call MilliTimerDad.startOneShot(250);
 
                     //espalhando
-                    m.tipo=0x03;
-                    if(!_isBusy)
-                        if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-                            _isBusy = TRUE;
+                    
                 }
             }
             else //resp dados
             {
-                if(mr->dst == TOS_NODE_ID && !_isReadingSensor)
+                if(mr->dst == TOS_NODE_ID && !_isReadingSensorT && !_isReadingSensorP)
                 {
                     //encaminhando
                     m.tipo=0x04;
@@ -155,9 +157,12 @@ implementation{
                     m.dst=meuPai;
                     m.origem=mr->origem;
                     m.id_req=mr->id_req;
-                    if (call Sensor.read() != SUCCESS)
+                    if (call TSensor.read() != SUCCESS)
       					report_problem();
-      				else _isReadingSensor = TRUE;
+      				else _isReadingSensorT = TRUE;
+      				if (call PSensor.read() != SUCCESS)
+      					report_problem();
+      				else _isReadingSensorP = TRUE;
                 }
             }
         }
@@ -165,12 +170,18 @@ implementation{
         
         return msg;
     }
-
-	event void MilliTimer.fired(){
-		// TODO Auto-generated method stub
+	
+	void checkData()
+	{
+		if(_TDataOK && _PDataOK){
+			if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+        		_isBusy = TRUE;
+        	_PDataOK = FALSE;
+        	_TDataOK = FALSE;
+        }
 	}
 
-	event void Sensor.readDone(error_t result, uint16_t data)
+	event void TSensor.readDone(error_t result, uint16_t data)
 	{
 		if (result != SUCCESS)
       	{
@@ -179,10 +190,42 @@ implementation{
       	}
     	
     	m.temp = data;
-    	if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
-        	_isBusy = TRUE;
-        	
-       	_isReadingSensor = FALSE;
+    	_TDataOK = TRUE;
+        checkData();
+        
+       	_isReadingSensorT = FALSE;
     	
+	}
+
+	event void PSensor.readDone(error_t result, uint16_t data)
+	{
+		if (result != SUCCESS)
+      	{
+			data = 0xffff;
+			report_problem();
+      	}
+    	
+    	m.lum = data;
+    	_PDataOK = TRUE;
+        checkData();
+        
+       	_isReadingSensorP = FALSE;
+    	
+	}
+
+	event void MilliTimerTop.fired(){
+		
+		
+		m.tipo=0x01;
+       	if(!_isBusy)
+        	if(call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS)
+            	_isBusy = TRUE;
+	}
+
+	event void MilliTimerDad.fired(){
+		m.tipo=0x01;
+        if(!_isBusy)
+        	if(call AMSend.send(AM_BROADCAST_ADDR, & _packet , sizeof(msg_t)) == SUCCESS)
+            	_isBusy = TRUE;
 	}
 }
