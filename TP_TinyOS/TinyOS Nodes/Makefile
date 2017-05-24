@@ -1,2 +1,13 @@
+<<<<<<< HEAD
+COMPONENT=BaseStationC
+CFLAGS += -DCC2420_NO_ACKNOWLEDGEMENTS
+CFLAGS += -DCC2420_NO_ADDRESS_RECOGNITION
+CFLAGS += -DTASKLET_IS_TASK
+
+TINYOS_ROOT_DIR?=../..
+include $(TINYOS_ROOT_DIR)/Makefile.include
+
+=======
 COMPONENT=NodeAppC
 include $(MAKERULES)
+>>>>>>> origin/master
