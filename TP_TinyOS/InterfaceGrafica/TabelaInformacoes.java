@@ -16,6 +16,7 @@
  */
 import javax.swing.JFrame;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -29,16 +30,33 @@ public class TabelaInformacoes extends JFrame {
     private JTable tabelaInformacoes;
     
     /**
-     * construtor da tabela de informações
+     * matriz com as informações dos nós
      */
-    public TabelaInformacoes() {
+    private final String[][] informacoesNos;
+    
+    /**
+     * construtor da tabela de informações
+     * @param matriz matriz com as informações dos nós
+     */
+    public TabelaInformacoes( String[][] matriz ) {
         inicializaComponentes();
+        informacoesNos = matriz;
     }
     
     /**
-     * mostra a tabela com informações de temperatura e luminosidade
+     * faz a tabela ser exibida com as informações passadas para ela no
+     * construtor
      */
     public void mostrarInformacoesTabela() {
+        DefaultTableModel modelo = 
+            ( DefaultTableModel ) tabelaInformacoes.getModel();
+        
+        for( String[] linha : informacoesNos ) {
+            modelo.addRow( new Object[] {
+                linha[ 0 ], linha[ 1 ], linha[ 2 ] 
+            } );
+        }
+        
         this.setVisible( true );
     }
 
@@ -53,12 +71,7 @@ public class TabelaInformacoes extends JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE );
 
         tabelaInformacoes.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
-            },
+            new Object [][] {},
             new String [] {
                 "Identificador", "Temperatura", "Luminosidade"
             }
@@ -93,3 +106,4 @@ public class TabelaInformacoes extends JFrame {
         pack();
     }
 }
+
