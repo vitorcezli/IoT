@@ -43,6 +43,8 @@ public class InterfaceGrafica extends JFrame {
     private JButton mostrarDadosButton;
     private JButton pausarButton;
     private final static double HEIGHT_REDIMENSION = 0.8;
+    private Thread threadInterface;
+    private String[][] dadosRecebidos;
     
     /**
      * construtor da interface gráfica
@@ -52,6 +54,7 @@ public class InterfaceGrafica extends JFrame {
         inicializaComponentes();
         ativarModoAutonomo();
         adicionaListeners();
+        threadInterface = null;
     }
 
     /**
@@ -92,33 +95,58 @@ public class InterfaceGrafica extends JFrame {
                 ativarModoAtivo();
             }
         } );
-        ativarButton.addActionListener( ( e ) -> {
-            adicionaGrafico();
-        } );
         mostrarDadosButton.addActionListener( ( e ) -> {
-            String[][] matriz = { { "ID-1", "20.3", "134" } };
-            new TabelaInformacoes( matriz ).mostrarInformacoesTabela();
+            if( dadosRecebidos != null ) {
+                new TabelaInformacoes( 
+                    dadosRecebidos 
+                ).mostrarInformacoesTabela();
+            }
+        } );
+        lerDadosButton.addActionListener( ( e ) -> {
+            ComunicacaoNos comunicacao = new ComunicacaoNos();
+            
+            Thread thread = new Thread( () -> {
+                while( !comunicacao.mensagemRecebida() );
+                byte[] bytesRecebidos = comunicacao.pegaMensagemRecebida();
+            } );
+            thread.start();
+        } );
+        ativarButton.addActionListener( ( e ) -> {
+            ComunicacaoNos comunicacao = new ComunicacaoNos();
+            threadInterface = new Thread( () -> {
+                while( true ) {
+                    while( !comunicacao.mensagemRecebida() );
+                    byte[] bytesRecebidos = comunicacao.pegaMensagemRecebida();
+                }
+            } );
+            threadInterface.start();
+        } );
+        pausarButton.addActionListener( ( e ) -> {
+            if( threadInterface != null ) {
+                threadInterface.interrupt();
+            }
         } );
     }
     
     /**
      * ler a topologia da memória secundária e desenha o gráfico
      */
-    private void adicionaGrafico() {
+    private void adicionaGrafico( String[][] nodesConnections ) {
         DirectedSparseGraph g = new DirectedSparseGraph();
-        g.addVertex("Vertex1");
-        g.addVertex("Vertex2");
-        g.addVertex("Vertex3");
-        g.addVertex("Vertex4");
-        g.addVertex("Vertex5");
-        g.addEdge("Edge1", "Vertex1", "Vertex2");
-        g.addEdge("Edge2", "Vertex1", "Vertex3");
-        g.addEdge("Edge3", "Vertex3", "Vertex1");
-        g.addEdge("Edge4", "Vertex2", "Vertex4");
-        g.addEdge("Edge5", "Vertex1", "Vertex5" );
-        g.addEdge("Edge6", "Vertex2", "Vertex5" );
-        g.addEdge("Edge7", "Vertex3", "Vertex5" );
-        g.addEdge("Edge8", "Vertex4", "Vertex5" );
+        
+        int numeroEdge = 0;
+        for( String[] connection : nodesConnections ) {
+            if( !g.containsVertex( connection[ 0 ] ) ) {
+                g.addVertex( connection[ 0 ] );
+            }
+            if( !g.containsVertex( connection[ 1 ] ) ) {
+                g.addVertex( connection[ 1 ] );
+            }
+            g.addEdge( 
+                Integer.toString( numeroEdge ), connection[ 0 ], connection[ 1 ] 
+            );
+            numeroEdge++;
+        }
         
         Transformer<String, String> transformer = ( String arg ) -> arg;
         
@@ -140,7 +168,7 @@ public class InterfaceGrafica extends JFrame {
     
     /**
      * função gerada pelo NetBeans para inicializar os componentes
-     */                        
+     */
     private void inicializaComponentes() {
 
         painelModoLeituraInformacoes = new javax.swing.JPanel();
@@ -254,6 +282,5 @@ public class InterfaceGrafica extends JFrame {
         );
 
         pack();
-    }// </editor-fold>                        
+    }
 }
-
