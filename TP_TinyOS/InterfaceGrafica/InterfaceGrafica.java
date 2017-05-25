@@ -108,6 +108,10 @@ public class InterfaceGrafica extends JFrame {
             Thread thread = new Thread( () -> {
                 while( !comunicacao.mensagemRecebida() );
                 byte[] bytesRecebidos = comunicacao.pegaMensagemRecebida();
+                ArrayList< ArrayList< String > > strings = 
+                        retornaDadosLidos( bytesRecebidos );
+                adicionaGrafico( retornaDadosTopologia( strings ) );
+                dadosRecebidos = retornaDadosInformacoes( strings );
             } );
             thread.start();
         } );
@@ -117,6 +121,10 @@ public class InterfaceGrafica extends JFrame {
                 while( true ) {
                     while( !comunicacao.mensagemRecebida() );
                     byte[] bytesRecebidos = comunicacao.pegaMensagemRecebida();
+                    ArrayList< ArrayList< String > > strings = 
+                        retornaDadosLidos( bytesRecebidos );
+                    adicionaGrafico( retornaDadosTopologia( strings ) );
+                    dadosRecebidos = retornaDadosInformacoes( strings );
                 }
             } );
             threadInterface.start();
@@ -126,6 +134,116 @@ public class InterfaceGrafica extends JFrame {
                 threadInterface.interrupt();
             }
         } );
+    }
+    
+    private String[][] retornaDadosTopologia( 
+        ArrayList< ArrayList< String > > mensagem ) {
+        ArrayList< ArrayList< String > > retorno = new ArrayList<>();
+        for( ArrayList< String > array : mensagem ) {
+            if( array.get( 1 ).equals( "top" ) ) {
+                ArrayList< String > newArray = new ArrayList<>();
+                for( int i = 1; i < array.size(); i++ ) {
+                    newArray.add( array.get( i ) );
+                }
+                retorno.add( newArray );
+            }
+        }
+        String[][] stringsRetorno = new String[ retorno.size() ][];
+        for( int i = 0; i < retorno.size(); i++ ) {
+            stringsRetorno[ i ][ 0 ] = retorno.get( i ).get( 0 );
+            stringsRetorno[ i ][ 1 ] = retorno.get( i ).get( 1 );
+        }
+        
+        return stringsRetorno;
+    }
+    
+    private String[][] retornaDadosInformacoes( 
+        ArrayList< ArrayList< String > > mensagem ) {
+        ArrayList< ArrayList< String > > retorno = new ArrayList<>();
+        for( ArrayList< String > array : mensagem ) {
+            if( array.get( 1 ).equals( "inf" ) ) {
+                ArrayList< String > newArray = new ArrayList<>();
+                for( int i = 1; i < array.size(); i++ ) {
+                    newArray.add( array.get( i ) );
+                }
+                retorno.add( newArray );
+            }
+        }
+        String[][] stringsRetorno = new String[ retorno.size() ][];
+        for( int i = 0; i < retorno.size(); i++ ) {
+            stringsRetorno[ i ][ 0 ] = retorno.get( i ).get( 0 );
+            stringsRetorno[ i ][ 1 ] = retorno.get( i ).get( 1 );
+            stringsRetorno[ i ][ 2 ] = retorno.get( i ).get( 2 );
+        }
+        
+        return stringsRetorno;
+    }
+    
+    /**
+     * retorna mensagem lida em string
+     * @param mensagemRecebida
+     * @return 
+     */
+    private ArrayList< ArrayList< String > > retornaDadosLidos( 
+        byte[] mensagemRecebida ) {
+        ArrayList< ArrayList< String > > mensagemRetorno = new ArrayList<>();
+        int index = 0;
+        while( index < mensagemRecebida.length ) {
+            if( mensagemRecebida[ index + 1 ] == 2 ) {
+                ArrayList< String > stringLida = new ArrayList<>();
+                stringLida.add( "top" );
+                ArrayList< String > mensagens = retornaStringByteRecebido( index,
+                    mensagemRecebida );
+                for( String mensagem : mensagens ) {
+                    stringLida.add( mensagem );
+                }
+                index += mensagemRecebida[ index ];
+                mensagemRetorno.add( stringLida );
+            } else if( mensagemRecebida[ index + 1 ] == 4 ) {
+                ArrayList< String > stringLida = new ArrayList<>();
+                stringLida.add( "inf" );
+                ArrayList< String > mensagens = retornaStringByteRecebido( index,
+                    mensagemRecebida );
+                for( String mensagem : mensagens ) {
+                    stringLida.add( mensagem );
+                }
+                index += mensagemRecebida[ index ];
+                mensagemRetorno.add( stringLida );
+            }
+        }
+        return mensagemRetorno;
+    }
+    
+    /**
+     * processa os bytes que foram recebidos
+     * @param mensagemRecebida 
+     */
+    private ArrayList< String > retornaStringByteRecebido( int index,
+        byte[] mensagemRecebida ) {
+        if( mensagemRecebida[ index + 1 ] == 2 ) {
+            int origem = mensagemRecebida[ index + 8 ] << 8 + 
+                mensagemRecebida[ index + 9 ];
+            int destino = mensagemRecebida[ index + 9 ] << 8 + 
+                mensagemRecebida[ index + 10 ];
+            ArrayList< String > stringRetorno = new ArrayList<>();
+            stringRetorno.add( Integer.toString( origem ) );
+            stringRetorno.add( Integer.toString( destino ) );
+            return stringRetorno;
+        }
+        if( mensagemRecebida[ index + 1 ] == 4 ) {
+            int origem = mensagemRecebida[ index + 6 ] << 8 + 
+                mensagemRecebida[ index + 7 ];
+            int luminosidade = mensagemRecebida[ index + 8 ] << 8 + 
+                mensagemRecebida[ index + 9 ];
+            int temperatura = mensagemRecebida[ index + 10 ] << 8 + 
+                mensagemRecebida[ index + 11 ];
+            ArrayList< String > stringRetorno = new ArrayList<>();
+            stringRetorno.add( Integer.toString( origem ) );
+            stringRetorno.add( Integer.toString( luminosidade ) );
+            stringRetorno.add( Integer.toString( temperatura ) );
+            return stringRetorno;
+        }
+        return null;
     }
     
     /**
