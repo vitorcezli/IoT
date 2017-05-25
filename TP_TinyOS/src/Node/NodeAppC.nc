@@ -1,4 +1,3 @@
-
 #include "nodes_comm.h"
 
 configuration NodeAppC

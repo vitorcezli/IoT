@@ -1,6 +1,6 @@
 #include "Timer.h"
 #include "nodes_comm.h"
-#include <stdlib.h>
+#include "printf.h"
 
 module BaseNodeC @safe(){
 
@@ -30,7 +30,8 @@ implementation{
     
     /* Variaveis de comunicação RSSF */
     nx_uint16_t id_req_atual;
-    msg_t m;
+    reqTopMsg_t reqtop;
+    reqDadoMsg_t reqdado;
     
     /* Program Function for User Control  */
     void report_problem() { call Leds.led0Toggle(); }
@@ -54,14 +55,14 @@ implementation{
     event void Timer0.fired() {
         id_req_atual++;
         if (!_isBusy) {
-            msg_t* mr=(msg_t*)(call Packet.getPayload(&_packet, sizeof(msg_t)));
-            if (mr == NULL) {
+            reqTopMsg_t* m=(reqTopMsg_t*)(call Packet.getPayload(&_packet, sizeof(msg_t)));
+            if (m == NULL) {
                 return;
             }
-            mr->src = (nx_uint8_t)TOS_NODE_ID;
-            mr->tipo = 0x01;
-            mr->id_req = id_req_atual;
-            if (call AMSend.send(AM_BROADCAST_ADDR, & _packet, sizeof(msg_t)) == SUCCESS) {
+            m->src = (nx_uint8_t)TOS_NODE_ID;
+            m->tipo = AM_REQ_TOPOLOGIA;
+            m->id_req = id_req_atual;
+            if (call AMSend.send(AM_BROADCAST_ADDR, m, sizeof(reqTopMsg_t)) == SUCCESS) {
                 _isBusy = TRUE;
             }
         }
@@ -70,34 +71,42 @@ implementation{
     event void Timer1.fired() {
         id_req_atual++;
         if (!_isBusy) {
-            msg_t* mr = (msg_t*)(call Packet.getPayload(& _packet, sizeof(msg_t)));
+            reqDadoMsg_t* m = (msg_t*)(call Packet.getPayload(& _packet, sizeof(msg_t)));
             if (mr == NULL) {
                 return;
             }
-            mr->src = (nx_uint8_t)TOS_NODE_ID;
-            mr->tipo=0x03;
-            mr->id_req=id_req_atual;
-            if (call AMSend.send(AM_BROADCAST_ADDR,& _packet, sizeof(msg_t)) == SUCCESS) {
+            m->src = (nx_uint8_t)TOS_NODE_ID;
+            m->tipo=AM_REQ_DADOS;
+            m->id_req=id_req_atual;
+            if (call AMSend.send(AM_BROADCAST_ADDR, m, sizeof(reqDadoMsg_t)) == SUCCESS) {
                 _isBusy = TRUE;
             }
         }
     }
 
-    event message_t* Receive.receive(message_t *ms, void *payload, uint8_t len)
+    event message_t* Receive.receive(message_t *msg, void *payload, uint8_t len)
     {
-        if(len == sizeof(msg_t) && !_isBusy)
+        if(!_isBusy)
         {
-        	msg_t *mr = (msg_t*) payload;
-            if(mr->tipo == 0x02) //resp top
+            if(len==sizeof(respTopMsg_t))
             {
-                
+                respTopMsg_t *m=(respTopMsg *)payload;
+                if(m->dst==(nx_uint8_t)TOS_NODE_ID)
+                {
+                    printf("%u %u\n", m->origem, m->destino);
+                }
             }
-            else if(mr->tipo=0x04) //resp dados
+            if(len==sizeof(respDadoMsg_t))
             {
-            	
+                respDadoMsg_t *m=(respDadoMsg *)payload;
+                if(m->dst==(nx_uint8_t)TOS_NODE_ID)
+                {
+                    printf("%u: %u %u\n", m->origem, m->temp, m->lum);
+                }
             }
         }
-        return ms;
+
+        if(_isBusy) report.problem();
     }
 
 	event void AMSend.sendDone(message_t *msg, error_t error)

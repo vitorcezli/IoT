@@ -1,4 +1,5 @@
 #include "nodes_comm.h"
+#include "printf.h"
 
 configuration BaseNodeAppC {}
 
