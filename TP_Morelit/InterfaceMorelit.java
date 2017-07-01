@@ -17,6 +17,7 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javax.swing.JButton;
@@ -73,14 +74,34 @@ public class InterfaceMorelit extends JFrame {
     private static final String SCRIPT_LER_DADOS = "cp testing.txt tested.txt";
     
     /**
+     * the script that will be executed to get the photo from Morelit server
+     */
+    private static final String SCRIPT_LER_FOTO = "cp photo2.jpg photo.jpg";
+    
+    /**
      * the path of the file that contains the table information
      */
-    private static final String READ_FILE_PATH = "tested.txt";
+    private static final String PATH_ARQUIVO_LIDO = "tested.txt";
+    
+    /**
+     * the path of the photo that will be read from the server
+     */
+    private static final String PATH_FOTO_LIDA = "photo.jpg";
     
     /**
      * the path of the file that will have the table data exported
      */
-    private static final String FILE_EXPORT_PATH = "exportedData.csv";
+    private static final String PATH_FILE_SAIDA = "exportedData.csv";
+    
+    /**
+     * the photo width
+     */
+    private static final int LARGURA_FOTO = 640;
+    
+    /**
+     * the photo height
+     */
+    private static final int ALTURA_FOTO = 360;
     
     /**
      * initializes the graphic interface
@@ -103,7 +124,7 @@ public class InterfaceMorelit extends JFrame {
      */
     private void generateDataFile() {
         try {
-            File file = new File( FILE_EXPORT_PATH );
+            File file = new File( PATH_FILE_SAIDA );
             PrintWriter printWriter = new PrintWriter( file );
             
             printWriter.println( "origem,data,dado,tipo" );
@@ -137,13 +158,12 @@ public class InterfaceMorelit extends JFrame {
         // gets the data from the server and exhibits it on the table
         lerDadosButton.addActionListener( ( e ) -> {
             Process process;
-            String s = null;
             try {
 		process = Runtime.getRuntime().exec( SCRIPT_LER_DADOS );
 		process.waitFor();
                 
                 // reads the data and puts them on the table
-                Scanner scanner = new Scanner( new File( READ_FILE_PATH ) );
+                Scanner scanner = new Scanner( new File( PATH_ARQUIVO_LIDO ) );
                 DefaultTableModel tableModel = 
                     (DefaultTableModel) tabelaDados.getModel();
                 while( scanner.hasNext() ) {
@@ -152,8 +172,24 @@ public class InterfaceMorelit extends JFrame {
                     String[] dataLine = line.split( "," );
                     tableModel.addRow( dataLine );
                 }
-            } catch( Exception exp ) {
+            } catch( IOException | InterruptedException exp ) {
                 System.exit( 1 );
+            }
+        } );
+        // gets a photo from the server and exhibits on this program
+        tirarFotoButton.addActionListener( ( e ) -> {
+            Process process;
+            try {
+		process = Runtime.getRuntime().exec( SCRIPT_LER_FOTO );
+		process.waitFor();
+                
+                PainelFoto painelFoto = new PainelFoto( PATH_FOTO_LIDA );
+                JFrame fotoFrame = new JFrame();
+                fotoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
+                fotoFrame.add( painelFoto );
+                fotoFrame.setSize( LARGURA_FOTO, ALTURA_FOTO );
+                fotoFrame.setVisible( true );              
+            } catch( Exception exp ) {
             }
         } );
     }
