@@ -15,11 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Scanner;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 /**
  * this class is the graphic interface for Morelit application
@@ -63,18 +68,94 @@ public class InterfaceMorelit extends JFrame {
     private JButton tirarFotoButton;
     
     /**
+     * the script that will be executed to get data from Morelit server
+     */
+    private static final String SCRIPT_LER_DADOS = "cp testing.txt tested.txt";
+    
+    /**
+     * the path of the file that contains the table information
+     */
+    private static final String READ_FILE_PATH = "tested.txt";
+    
+    /**
+     * the path of the file that will have the table data exported
+     */
+    private static final String FILE_EXPORT_PATH = "exportedData.csv";
+    
+    /**
      * initializes the graphic interface
      */
     public InterfaceMorelit() {
-        super("Morelit");
+        super( "Morelit" );
         initComponents();
+        initEventListeners();
     }
     
     /**
      * displays the interface for the user
      */
     public void mostreInterface() {
-        this.setVisible(true);
+        this.setVisible( true );
+    }
+    
+    /**
+     * generates a csv file corresponding to the table's data
+     */
+    private void generateDataFile() {
+        try {
+            File file = new File( FILE_EXPORT_PATH );
+            PrintWriter printWriter = new PrintWriter( file );
+            
+            printWriter.println( "origem,data,dado,tipo" );
+            for( int i = 0; i < tabelaDados.getRowCount(); i++ ) {
+                for( int j = 0; j < tabelaDados.getColumnCount(); j++ ) {
+                    if( j == tabelaDados.getColumnCount() - 1 ) {
+                        printWriter.print( "\"" );
+                        printWriter.print( tabelaDados.getValueAt( i, j ) );
+                        printWriter.println( "\"" );
+                    } else {
+                        printWriter.print( "\"" );
+                        printWriter.print( tabelaDados.getValueAt( i, j ) );
+                        printWriter.print( "\"," );
+                    }                    
+                }
+            }
+            printWriter.close();
+        } catch( FileNotFoundException e ) {
+            // does nothing
+        }
+    }
+    
+    /**
+     * initializes the listeners
+     */
+    private void initEventListeners() {
+        // exports the table's data as csv
+        exportarDadosButton.addActionListener( ( e ) -> {
+            generateDataFile();
+        } );
+        // gets the data from the server and exhibits it on the table
+        lerDadosButton.addActionListener( ( e ) -> {
+            Process process;
+            String s = null;
+            try {
+		process = Runtime.getRuntime().exec( SCRIPT_LER_DADOS );
+		process.waitFor();
+                
+                // reads the data and puts them on the table
+                Scanner scanner = new Scanner( new File( READ_FILE_PATH ) );
+                DefaultTableModel tableModel = 
+                    (DefaultTableModel) tabelaDados.getModel();
+                while( scanner.hasNext() ) {
+                    String line = scanner.next();
+                    line = line.replaceAll( "\"", "" );
+                    String[] dataLine = line.split( "," );
+                    tableModel.addRow( dataLine );
+                }
+            } catch( Exception exp ) {
+                System.exit( 1 );
+            }
+        } );
     }
 
     /**
@@ -125,42 +206,7 @@ public class InterfaceMorelit extends JFrame {
         );
 
         tabelaDados.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
+            new Object [][] {},
             new String [] {
                 "Origem", "Data", "Dado", "Tipo"
             }
