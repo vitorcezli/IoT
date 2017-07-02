@@ -127,7 +127,7 @@ public class InterfaceMorelit extends JFrame {
             File file = new File( PATH_FILE_SAIDA );
             PrintWriter printWriter = new PrintWriter( file );
             
-            printWriter.println( "origem,data,dado,tipo" );
+            printWriter.println( "Endereco,Tipo_Dado,Data,Hora,Valor" );
             for( int i = 0; i < tabelaDados.getRowCount(); i++ ) {
                 for( int j = 0; j < tabelaDados.getColumnCount(); j++ ) {
                     if( j == tabelaDados.getColumnCount() - 1 ) {
@@ -167,7 +167,7 @@ public class InterfaceMorelit extends JFrame {
                 DefaultTableModel tableModel = 
                     (DefaultTableModel) tabelaDados.getModel();
                 while( scanner.hasNext() ) {
-                    String line = scanner.next();
+                    String line = scanner.nextLine();
                     line = line.replaceAll( "\"", "" );
                     String[] dataLine = line.split( "," );
                     tableModel.addRow( dataLine );
@@ -244,7 +244,7 @@ public class InterfaceMorelit extends JFrame {
         tabelaDados.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {},
             new String [] {
-                "Origem", "Data", "Dado", "Tipo"
+                "Endereco", "Tipo de Dado", "Data", "Hora", "Valor"
             }
         ) {
             boolean[] canEdit = new boolean [] {
