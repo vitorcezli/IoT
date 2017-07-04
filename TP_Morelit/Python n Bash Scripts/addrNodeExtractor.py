@@ -9,11 +9,11 @@ nodesReq = fileNodes.read(); #Le todos os dados para separar os enderecos dos no
 
 #print nodesReq.split("|-", 8)
 
-for line in nodesReq.split("|-", 8):
+for line in nodesReq.split("|-"):
 	#print line
 	if line.startswith('0013'): # verifica se a linha e comeca com o endereço
 		#print line[0:15]
-		fileAddr.write(line[0:15] " ")
+		fileAddr.write(line[0:16] + " ")
 
 fileNodes.close()
 fileAddr.close()
