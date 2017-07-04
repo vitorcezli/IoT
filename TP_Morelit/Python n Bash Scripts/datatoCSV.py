@@ -4,11 +4,11 @@
 import os, sys
 
 fdataNodes = open("requestAllNode.txt", "r+")
-csvData = open("datacsv.txt", "w+")
+csvData = open("data.txt", "w+")
 dataNodes = fdataNodes.read(); #Le todos os dados para separar os enderecos dos nos visiveis
 
 #print dataNodes.split(": ")
-csvData.write("Endereco_No;Tipo_Dado;Data;Hora;Valor;\n")
+#csvData.write("Endereco_No;Tipo_Dado;Data;Hora;Valor;\n")
 for line in dataNodes.split(": "):
 	#rint line
 	#print line[len(line) - 3]
@@ -35,7 +35,7 @@ for line in dataNodes.split(": "):
 		csvData.write( '\"' + subLine[0] + '\" \n')
 	elif (line.endswith('\n')):
 		#print line # ultimo valor
-		csvData.write( '\"' + line[0:len(line)-1] + '\",')	
+		csvData.write( '\"' + line[0:len(line)-1])	
 
 fdataNodes.close()
 csvData.close()
