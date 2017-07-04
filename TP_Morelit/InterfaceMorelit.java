@@ -71,17 +71,17 @@ public class InterfaceMorelit extends JFrame {
     /**
      * the script that will be executed to get data from Morelit server
      */
-    private static final String SCRIPT_LER_DADOS = "cp testing.txt tested.txt";
+    private static final String SCRIPT_LER_DADOS = "./scripts/genInterfaceData.sh";
     
     /**
      * the script that will be executed to get the photo from Morelit server
      */
-    private static final String SCRIPT_LER_FOTO = "cp photo2.jpg photo.jpg";
+    private static final String SCRIPT_LER_FOTO = "./scripts/getPhotos.sh";
     
     /**
      * the path of the file that contains the table information
      */
-    private static final String PATH_ARQUIVO_LIDO = "tested.txt";
+    private static final String PATH_ARQUIVO_LIDO = "./scripts/data.txt";
     
     /**
      * the path of the photo that will be read from the server
