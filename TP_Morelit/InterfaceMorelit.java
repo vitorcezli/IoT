@@ -26,6 +26,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 
 /**
  * this class is the graphic interface for Morelit application
@@ -71,7 +74,7 @@ public class InterfaceMorelit extends JFrame {
     /**
      * the script that will be executed to get data from Morelit server
      */
-    private static final String SCRIPT_LER_DADOS = "./scripts/genInterfaceData.sh";
+    private static final String SCRIPT_LER_DADOS = "./scripts/getInterfaceData.sh 1";
     
     /**
      * the script that will be executed to get the photo from Morelit server
@@ -81,7 +84,7 @@ public class InterfaceMorelit extends JFrame {
     /**
      * the path of the file that contains the table information
      */
-    private static final String PATH_ARQUIVO_LIDO = "./scripts/data.txt";
+    private static final String PATH_ARQUIVO_LIDO = "./scripts/datacsv.txt";
     
     /**
      * the path of the photo that will be read from the server
@@ -157,22 +160,28 @@ public class InterfaceMorelit extends JFrame {
         } );
         // gets the data from the server and exhibits it on the table
         lerDadosButton.addActionListener( ( e ) -> {
-            Process process;
             try {
-		process = Runtime.getRuntime().exec( SCRIPT_LER_DADOS );
-		process.waitFor();
-                
-                // reads the data and puts them on the table
-                Scanner scanner = new Scanner( new File( PATH_ARQUIVO_LIDO ) );
-                DefaultTableModel tableModel = 
-                    (DefaultTableModel) tabelaDados.getModel();
-                while( scanner.hasNext() ) {
-                    String line = scanner.nextLine();
-                    line = line.replaceAll( "\"", "" );
-                    String[] dataLine = line.split( "," );
-                    tableModel.addRow( dataLine );
-                }
-            } catch( IOException | InterruptedException exp ) {
+                new Thread( () -> {
+                    try{
+                        Process process;
+                        process = Runtime.getRuntime().exec( SCRIPT_LER_DADOS );
+                        process.waitFor();
+                        
+                        // reads the data and puts them on the table
+                        Scanner scanner = new Scanner( new File( PATH_ARQUIVO_LIDO ) );
+                        DefaultTableModel tableModel = 
+                            (DefaultTableModel) tabelaDados.getModel();
+                        while( scanner.hasNext() ) {
+                            String line = scanner.nextLine();
+                            line = line.replaceAll( "\"", "" );
+                            String[] dataLine = line.split( "," );
+                            tableModel.addRow( dataLine );
+                        }
+                    } catch( Exception exp ) {
+                        exp.printStackTrace();
+                    }
+                }).start();
+            } catch( Exception exp ) {
                 System.exit( 1 );
             }
         } );
@@ -183,7 +192,21 @@ public class InterfaceMorelit extends JFrame {
                     try{
                         Process process;
                         process = Runtime.getRuntime().exec( SCRIPT_LER_FOTO );
-                        process.waitFor();
+                        //process.waitFor();
+
+                        final int exitValue = process.waitFor();
+                        if (exitValue == 0)
+                            System.out.println("Successfully executed the command: " + SCRIPT_LER_FOTO);
+                        else {
+                            System.out.println("Failed to execute the following command" + SCRIPT_LER_FOTO + " due to the following error(s):");
+                            try (final BufferedReader b = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                                String line;
+                                if ((line = b.readLine()) != null)
+                                    System.out.println(line);
+                            } catch (final Exception ex) {
+                                ex.printStackTrace();
+                            }                
+                        }
                         
                         PainelFoto painelFoto = new PainelFoto( PATH_FOTO_LIDA );
                         JFrame fotoFrame = new JFrame();
