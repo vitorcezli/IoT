@@ -80,11 +80,16 @@ public class InterfaceMorelit extends JFrame {
      * the script that will be executed to get the photo from Morelit server
      */
     private static final String SCRIPT_LER_FOTO = "./scripts/getPhotos.sh";
+
+    /**
+     * the script that will be executed to show temperature's and luminosity's values
+     */
+    private static final String SCRIPT_GERAR_GRAFICOS = "Rscript rprogram.R";
     
     /**
      * the path of the file that contains the table information
      */
-    private static final String PATH_ARQUIVO_LIDO = "./scripts/datacsv.txt";
+    private static final String PATH_ARQUIVO_LIDO = "datacsv.txt";
     
     /**
      * the path of the photo that will be read from the server
@@ -145,6 +150,17 @@ public class InterfaceMorelit extends JFrame {
                 }
             }
             printWriter.close();
+
+            new Thread( () -> {
+                try{
+                    Process process;
+                    process = Runtime.getRuntime().exec( SCRIPT_GERAR_GRAFICOS );
+                    process.waitFor();
+                } catch( Exception exp ) {
+                    exp.printStackTrace();
+                }
+            }).start();
+
         } catch( FileNotFoundException e ) {
             // does nothing
         }
