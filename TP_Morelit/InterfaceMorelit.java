@@ -86,7 +86,7 @@ public class InterfaceMorelit extends JFrame {
     /**
      * the path of the photo that will be read from the server
      */
-    private static final String PATH_FOTO_LIDA = "photo.jpg";
+    private static final String PATH_FOTO_LIDA = "./scripts/photo.jpg";
     
     /**
      * the path of the file that will have the table data exported
@@ -178,17 +178,23 @@ public class InterfaceMorelit extends JFrame {
         } );
         // gets a photo from the server and exhibits on this program
         tirarFotoButton.addActionListener( ( e ) -> {
-            Process process;
             try {
-		process = Runtime.getRuntime().exec( SCRIPT_LER_FOTO );
-		process.waitFor();
-                
-                PainelFoto painelFoto = new PainelFoto( PATH_FOTO_LIDA );
-                JFrame fotoFrame = new JFrame();
-                fotoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
-                fotoFrame.add( painelFoto );
-                fotoFrame.setSize( LARGURA_FOTO, ALTURA_FOTO );
-                fotoFrame.setVisible( true );              
+                new Thread( () -> {
+                    try{
+                        Process process;
+                        process = Runtime.getRuntime().exec( SCRIPT_LER_FOTO );
+                        process.waitFor();
+                        
+                        PainelFoto painelFoto = new PainelFoto( PATH_FOTO_LIDA );
+                        JFrame fotoFrame = new JFrame();
+                        fotoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
+                        fotoFrame.add( painelFoto );
+                        fotoFrame.setSize( LARGURA_FOTO, ALTURA_FOTO );
+                        fotoFrame.setVisible( true );
+                    } catch( Exception exp ) {
+                        exp.printStackTrace();
+                    }
+                }).start();
             } catch( Exception exp ) {
             }
         } );
