@@ -1,8 +1,0 @@
-Comando enviado com sucesso!
-Para visualizar o resultado use o comando './console LIST_NODES' no terminal ou acesse pelo menu principal
-|-----ENDERECO------RSSI DO ULTIMO HOP-|
-|-0013A20040DBC730------(-42 dBm)------|
-|-0013A20040F33FB6------(-86 dBm)------|
-|-0013A20040F1CBE7------(-45 dBm)------|
-|--------------------------------------|
-TOTAL = 3
