@@ -182,7 +182,6 @@ public class InterfaceMorelit extends JFrame {
                     }
                 }).start();
             } catch( Exception exp ) {
-                System.exit( 1 );
             }
         } );
         // gets a photo from the server and exhibits on this program
@@ -192,22 +191,8 @@ public class InterfaceMorelit extends JFrame {
                     try{
                         Process process;
                         process = Runtime.getRuntime().exec( SCRIPT_LER_FOTO );
-                        //process.waitFor();
+                        process.waitFor();
 
-                        final int exitValue = process.waitFor();
-                        if (exitValue == 0)
-                            System.out.println("Successfully executed the command: " + SCRIPT_LER_FOTO);
-                        else {
-                            System.out.println("Failed to execute the following command" + SCRIPT_LER_FOTO + " due to the following error(s):");
-                            try (final BufferedReader b = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                                String line;
-                                if ((line = b.readLine()) != null)
-                                    System.out.println(line);
-                            } catch (final Exception ex) {
-                                ex.printStackTrace();
-                            }                
-                        }
-                        
                         PainelFoto painelFoto = new PainelFoto( PATH_FOTO_LIDA );
                         JFrame fotoFrame = new JFrame();
                         fotoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
